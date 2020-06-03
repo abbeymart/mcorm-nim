@@ -1,0 +1,5 @@
+project.md
+*.exe
+mcorm.exe
+
+config/secure
