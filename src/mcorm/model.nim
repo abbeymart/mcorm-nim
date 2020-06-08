@@ -1,5 +1,5 @@
 #
-#              mconnect solutions
+#                   mconnect solutions
 #        (c) Copyright 2020 Abi Akindele (mconnect.biz)
 #
 #    See the file "LICENSE.md", included in this
@@ -19,16 +19,17 @@ import times
 type
     ModelDefinition* = ref object
         modelName*: string
-        partOf*: string
+        partOf*: string     # e.g. employee is part of a department
+        partsOf*: string     # e.g. employee is part of more than one department
         partOfField*: seq[string]
-        contains*: string
+        contains*: string # e.g. department may contains employees
 
     FieldDefinition* = ref object
         fieldName*: string
         fieldType*: string
         fieldLength*: uint
-        fieldPatern*: string
-        fieldFormat*: string
+        fieldPatern*: string # "![0-9]" => excluding digit 0 to 9 | "![_, -, \, /, *, |, ]" => exclude the charaters
+        fieldFormat*: string # "12.2" => max 12 digits, including 2 digits after the decimal
         notNull*: bool
         unique*: bool
         indexable*: bool
