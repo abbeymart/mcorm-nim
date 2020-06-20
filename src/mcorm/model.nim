@@ -23,6 +23,7 @@ type
         partsOf*: string     # e.g. employee is part of more than one department
         partOfField*: seq[string]
         contains*: string # e.g. department may contains employees
+        fieldItems*: seq[FieldDefinition]
 
     FieldDefinition* = ref object
         fieldName*: string
@@ -34,7 +35,8 @@ type
         unique*: bool
         indexable*: bool
         primaryKey*: bool
-        fieldDefaultValue*: proc(user: FieldDefinition): typedesc
+        foreignKey*: bool
+        fieldDefaultValue*: proc: typedesc
         fieldMinValue*: float
         fieldMaxValue*: float
 
