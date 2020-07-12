@@ -40,6 +40,9 @@ type
         fieldMinValue*: float
         fieldMaxValue*: float
 
+    FunctionDefinition* = object
+        funcName*: string
+
     # Example:
     Profile* = object
         isAdmin*: bool
