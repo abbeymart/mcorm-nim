@@ -1,7 +1,19 @@
-# This is just an example to get you started. A typical library package
-# exports the main API in this file. Note that you cannot rename this file
-# but you can remove it if you wish.
+#
+#            mccentral APIs solution
+#        (c) Copyright 2020 Abi Akindele (mconnect.biz)
+#
+#    See the file "LICENSE.md", included in this
+#    distribution, for details about the copyright / license.
+#
+#      This is the entry point for mcorm package / library
+# 
 
-proc add*(x, y: int): int =
-  ## Adds two files together.
-  return x + y
+import mccrud/crud
+import mccrud/getrecord
+import mccrud/saverecord
+import mccrud/deleterecord
+
+export crud
+export getrecord
+export saverecord
+export deleterecord
