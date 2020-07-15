@@ -8,25 +8,29 @@
 
 ## CRUD types | centralised and exported types for all CRUD operations
 ## 
-import json, db_postgres, tables
+import json, db_postgres, tables, times
 import mcdb, mctranslog
 
 # Define crud types
 type
-    ValueType* = int | string | float | bool | Positive | JsonNode | BiggestInt | BiggestFloat | Table | seq | Database | typed
-
     UUID* = string
 
-    Relation* = object
-        relationType*: string   # one-to-one, one-to-many, many-to-many
-        foreignTable*: string
-        foreignFields*: seq[string]
+    ValueType* = int | string | float | bool | Positive | JsonNode | BiggestInt | BiggestFloat | Table | seq | Database | typed | UUID
+
+    CreatedBy* = string
+    UpdatedBy* = string
+    CreatedAt* = DateTime
+    UpdatedAt* = DateTime
 
     TimeStamp* = object
-        createBy: string
-        createdAt: DateTime
-        updatedBy: string
-        updatedAt: DateTime
+        createBy*: CreatedBy
+        createdAt*: CreatedAt
+        updatedBy*: UpdatedBy
+        updatedAt*: UpdatedAt
+    
+    DefaultProc* = proc(rec: Field ): (string | int | float | bool | DateTime) | proc(): (string | int | float | bool | DateTime)
+
+    ConstraintProc* = proc(rec: Field): bool | proc(): bool
 
     Field* = ref object
         fieldName*: string
@@ -38,20 +42,21 @@ type
         unique*: bool
         indexable*: bool
         primaryKey*: bool
-        foreignKey*: Relation
-        fieldDefaultValue*: proc(rec: Field): string | int | float | bool
+        foreignKey*: bool
+        fieldConstraint*: ConstraintProc
+        fieldDefaultValue*: DefaultProc
         fieldMinValue*: float
         fieldMaxValue*: float
-
-    Function* = object
-        funcName*: string
     
+    Relation* = ref object
+        relationType*: string   # one-to-one, one-to-many, many-to-one, many-to-many
+        localField*: Field
+        foreignTable*: string
+        foreignFields*: seq[string]
+
     Model* = ref object
         modelName*: string
-        partOf*: string     # e.g. employee is part of a department
-        partsOf*: string     # e.g. employee is part of more than one department
-        partOfField*: seq[string]
-        contains*: string # e.g. department may contains employees
+        relation*: Relation
         fieldItems*: seq[Field]
         timeStamp*: bool
 
