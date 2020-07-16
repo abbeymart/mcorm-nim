@@ -15,26 +15,17 @@ import mcdb, mctranslog
 type
     UUID* = string
 
-    ValueType* = int | string | float | bool | Positive | JsonNode | BiggestInt | BiggestFloat | Table | seq | Database | typed | UUID
-
-    CreatedBy* = string
-    UpdatedBy* = string
-    CreatedAt* = DateTime
-    UpdatedAt* = DateTime
+    ValueType* = int | string | float | bool | Positive | JsonNode | BiggestInt | BiggestFloat | Table | Database
 
     TimeStamp* = object
-        createBy*: CreatedBy
-        createdAt*: CreatedAt
-        updatedBy*: UpdatedBy
-        updatedAt*: UpdatedAt
+        createBy*: string
+        createdAt*: DateTime
+        updatedBy*: string
+        updatedAt*: DateTime
     
-    DefaultProc* = proc(rec: Field ): (string | int | float | bool | DateTime) | proc(): (string | int | float | bool | DateTime)
-
-    ConstraintProc* = proc(rec: Field): bool | proc(): bool
-
     Field* = ref object
         fieldName*: string
-        fieldType*: typedesc
+        fieldType*: string
         fieldLength*: uint
         fieldPatern*: string # "![0-9]" => excluding digit 0 to 9 | "![_, -, \, /, *, |, ]" => exclude the charaters
         fieldFormat*: string # "12.2" => max 12 digits, including 2 digits after the decimal
@@ -43,11 +34,19 @@ type
         indexable*: bool
         primaryKey*: bool
         foreignKey*: bool
-        fieldConstraint*: ConstraintProc
-        fieldDefaultValue*: DefaultProc
         fieldMinValue*: float
         fieldMaxValue*: float
     
+    # ModelProc* = proc(rec: Field ): string | int | float | bool | DateTime | Time
+    
+    # ModelProc* = proc(): string | int | float | bool | DateTime | Time
+
+    # ModelConstraint* = proc(rec: Field): bool | proc(): bool
+
+    ModelProc*[T, R] = proc(rec: var T): R
+
+    ModelConstraint*[T] = proc(rec: var T): bool
+
     Relation* = ref object
         relationType*: string   # one-to-one, one-to-many, many-to-one, many-to-many
         localField*: Field
@@ -56,9 +55,11 @@ type
 
     Model* = ref object
         modelName*: string
-        relation*: Relation
-        fieldItems*: seq[Field]
         timeStamp*: bool
+        relations*: seq[Relation]
+        fieldItems*: seq[Field]
+        # modelDefaults*: seq[ModelProc]
+        # modelConstraints*: seq[ModelConstraint]
 
     ## User/client information to be provided after successful login
     ## 
