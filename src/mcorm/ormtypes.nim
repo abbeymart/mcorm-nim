@@ -43,9 +43,11 @@ type
 
     # ModelConstraint* = proc(rec: Field): bool | proc(): bool
 
-    ModelProc*[T, R] = proc(rec: var T): R
+    ModelProc*[T, R] = proc(rec: T): R
 
-    ModelConstraint*[T] = proc(rec: var T): bool
+    ModelConstraint*[T] = proc(rec: T): bool
+
+    FieldValueType* = int | string | float | bool | Positive | JsonNode | BiggestInt | BiggestFloat
 
     Relation* = ref object
         relationType*: string   # one-to-one, one-to-many, many-to-one, many-to-many
@@ -53,13 +55,14 @@ type
         foreignTable*: string
         foreignFields*: seq[string]
 
-    Model* = ref object
+    ModelDesc* = ref object
         modelName*: string
         timeStamp*: bool
         relations*: seq[Relation]
-        fieldItems*: seq[Field]
-        # modelDefaults*: seq[ModelProc]
-        # modelConstraints*: seq[ModelConstraint]
+        fieldNames*: seq[string]
+        fieldProps*: seq[Field]
+        # modelDefaults*: seq[ModelProc[Field, FieldValueType ]]
+        # modelConstraints*: seq[ModelConstraint[Field]]
 
     ## User/client information to be provided after successful login
     ## 

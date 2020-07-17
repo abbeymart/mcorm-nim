@@ -30,12 +30,34 @@ let
     updatedByField = Field(fieldName: "updatedby", fieldType: "string" )
     updatedAtField = Field(fieldName: "updatedat", fieldType: "datetime")
 
-var User: Model = Model(
-    modelName: "users",
-    fieldItems: @[
+type 
+    Profile* = object
+        isAdmin*: bool
+        defaultGroup*: string
+        defaultLanguage*: string
+        dob*: DateTime
+
+    UserModel* =  object
+        id*: string
+        username*: string
+        email*: string
+        recoveryEmail*: string
+        firstName*: string
+        middleName*: string
+        lastName*: string
+        profile*: Profile
+        lang*: string
+        desc*: string
+        isActive*: bool
+        fullName*: proc(user: UserModel): string 
+
+proc UserDesc(): ModelDesc =
+    result.modelName = "User"
+    result.fieldNames= @["id", "username", "firstName", "lastName"]
+    result.fieldProps = @[
         Field(
             fieldName: "id",
-            fieldType: "uuid",
+            fieldType: "string",
             fieldLength: 64,
             notNull: true,
             primaryKey: true,
@@ -46,17 +68,22 @@ var User: Model = Model(
             fieldLength: 64,
             notNull: true,
         ),
-    ],
-)
-echo "user-model: " & User.repr
+    ]
+
+    result.timeStamp = true
+
+proc fullName(user: UserModel): string =
+    result = if user.middleName != "":
+                user.firstName & " " & user.middleName & " " & user.lastName
+            else:
+                 user.firstName & " " & user.lastName
 
 
 
-# proc User(): Model =
-#     echo "user model"
-#     result.modelName = "users"
 
-#     result.fieldItems = @[
+# var User: Model = Model(
+#     modelName: "users",
+#     fieldItems: @[
 #         Field(
 #             fieldName: "id",
 #             fieldType: "uuid",
@@ -71,6 +98,5 @@ echo "user-model: " & User.repr
 #             notNull: true,
 #         ),
 #     ]
-
-#     result.timeStamp = true
-
+# )
+# echo "user-model: " & User.repr
