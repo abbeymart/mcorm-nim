@@ -14,6 +14,61 @@ import mcdb, mctranslog
 
 # Define crud types
 type
+    DataTypes* = enum
+        STRING,
+        POSITIVE,
+        INT,
+        FLOAT,
+        BOOLEAN,
+        JSON,
+        BIGINT,
+        BIGFLOAT,
+        OBJECT,     # Table/Map: key-value pairs
+        ENUM,       # Enumerations
+        SET,        # unique values
+        ARRAY,
+        PROC,
+        UNARYPROC,
+        BIPROC,
+        PREDICATEPROC,
+        BIPREDICATEPROC,
+        SUPPLYPROC,
+        BISUPPLYPROC,
+        CONSUMERPROC,
+        BICONSUMERPROC,
+        COMPARATORPROC,
+
+    Op* = enum
+        AND,
+        OR,
+        NE,
+        EQ,
+        GT,
+        GTE,
+        LE,
+        LTE,
+        IN,
+        NOTIN,
+        BETWEEN,
+        NOTBETWEEN,
+        INCLUDE,
+        LIKE,
+        NOTLIKE,
+        STARTSWITH,
+        ENDSWITH,
+        ILIKE,
+        NOTILIKE,
+        REGEX,
+        NOTREGEX,
+        IREGEX,
+        NOTIREGEX,
+        ANY,
+        ALL,
+
+    Order* = enum
+        ASC,
+        DESC,
+
     UUID* = string
 
     ValueType* = int | string | float | bool | Positive | JsonNode | BiggestInt | BiggestFloat | Table | Database
@@ -41,12 +96,12 @@ type
 
     Default* = object
         fieldName*: string
-        fieldType*: string
+        fieldType*: DataTypes
         fieldValue*: string  # stringified field value to be casted into fieldType
 
     Method* = object
         methodName*: string
-        valueType*: string
+        valueType*: DataTypes  # return type
         value*: string  # stringified field value to be casted into fieldType
 
     Validation* = object
@@ -65,7 +120,7 @@ type
         constraintItems*: seq[Constraint]
 
     FieldDesc* = object
-        fieldType*: string
+        fieldType*: DataTypes
         fieldLength*: Positive
         fieldPattern*: string # "![0-9]" => excluding digit 0 to 9 | "![_, -, \, /, *, |, ]" => exclude the charaters
         fieldFormat*: string # "12.2" => max 12 digits, including 2 digits after the decimal
@@ -119,22 +174,22 @@ type
     FieldItem* = object
         fieldColl*: string
         fieldName*: string
-        fieldType*: string   ## "int", "string", "bool", "boolean", "float",...
+        fieldType*: DataTypes   ## "int", "string", "bool", "boolean", "float",...
         fieldOrder*: string
-        fieldOp*: string    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
+        fieldOp*: Op    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
         fieldValue*: string  ## for insert/update | start value for range/BETWEEN/NOTBETWEEN and pattern for LIKE operators
         fieldValueEnd*: string   ## end value for range/BETWEEN/NOTBETWEEN operator
         fieldValues*: seq[string] ## values for IN/NOTIN operator
         fieldSubQuery*: QueryParam ## for WHERE IN (SELECT field from fieldColl)
         fieldPostOp*: string ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
-        groupOp*: string     ## e.g. AND | OR...
+        groupOp*: Op     ## e.g. AND | OR...
         fieldAlias*: string ## for SELECT/Read query
         show*: bool     ## includes or excludes from the SELECT query fields
         fieldFunction*: string ## COUNT, MIN, MAX... for select/read-query...
 
     WhereParam* = object
         groupCat*: string       # group (items) categorization
-        groupLinkOp*: string    # group relationship to the next group (AND, OR)
+        groupLinkOp*: Op    # group relationship to the next group (AND, OR)
         groupOrder*: int        # group order, the last group groupLinkOp should be "" or will be ignored
         groupItems*: seq[FieldItem] # group items to be composed by category
 
@@ -187,22 +242,22 @@ type
         collName*: string
         fieldName*: string
         queryFunction*: QueryFunction
-        fieldOrder*: string ## "ASC" ("asc") | "DESC" ("desc")
-        functionOrder*: string
+        fieldOrder*: Order ## "ASC" ("asc") | "DESC" ("desc")
+        functionOrder*: Order
 
     # for aggregate query condition
     HavingParam* = object
         collName: string
         queryFunction*: QueryFunction
-        queryOp*: string
+        queryOp*: Op
         queryOpValue*: string ## value will be cast to fieldType in queryFunction
-        orderType*: string ## "ASC" ("asc") | "DESC" ("desc")
+        orderType*: Order ## "ASC" ("asc") | "DESC" ("desc")
         # subQueryParams*: SubQueryParam # for ANY, ALL, EXISTS...
 
     SubQueryParam* = object
         whereType*: string   ## EXISTS, ANY, ALL
         whereField*: string  ## for ANY / ALL | Must match the fieldName in queryParam
-        whereOp*: string     ## e.g. "=" for ANY / ALL
+        whereOp*: Op     ## e.g. "=" for ANY / ALL
         queryParams*: QueryParam
         queryWhereParams*: WhereParam
 
