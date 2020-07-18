@@ -82,7 +82,7 @@ proc User(): UserModel =
         )
 
     result.userModel.record["id"] = FieldDesc(
-        fieldType: "UUID",
+        fieldType: DataTypes.UUID,
         fieldLength: 255,
         fieldPattern: "![0-9]", # exclude digit 0 to 9 | "![_, -, \, /, *, |, ]" => exclude the charaters
         fieldFormat: "12.2", # => max 12 digits, including 2 digits after the decimal
@@ -96,7 +96,7 @@ proc User(): UserModel =
     )
 
     result.userModel.record["firstName"] = FieldDesc(
-        fieldType: "string",
+        fieldType: DataTypes.STRING,
         fieldLength: 255,
         fieldPattern: "[a-zA-Z]",
         fieldFormat: "XXXXXXXXXX",

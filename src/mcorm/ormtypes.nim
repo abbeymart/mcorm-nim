@@ -16,6 +16,7 @@ import mcdb, mctranslog
 type
     DataTypes* = enum
         STRING,
+        UUID,
         POSITIVE,
         INT,
         FLOAT,
@@ -23,6 +24,9 @@ type
         JSON,
         BIGINT,
         BIGFLOAT,
+        DATE,
+        DATETIME,
+        TIMESTAMP,
         OBJECT,     # Table/Map: key-value pairs
         ENUM,       # Enumerations
         SET,        # unique values
@@ -69,22 +73,15 @@ type
         ASC,
         DESC,
 
-    UUID* = string
-
     ValueType* = int | string | float | bool | Positive | JsonNode | BiggestInt | BiggestFloat | Table | Database
 
     FieldValueType* = int | string | float | bool | Positive | JsonNode | BiggestInt | BiggestFloat
 
-    CreatedBy* = UUID
-    UpdatedBy* = UUID
+    CreatedBy* = DataTypes
+    UpdatedBy* = DataTypes
     CreatedAt* = DateTime
     UpdatedAt* = DateTime
 
-    TimeStamp* = object
-        createdBy*: CreatedBy
-        createdAt*: CreatedAt
-        updatedBy*: UpdatedBy
-        updatedAt*: UpdatedAt
     
     DefaultProc*[T, R] = proc(val: T): R {.closure.}
     MethodProc*[T, R] = proc(rec: T): R {.closure.}
