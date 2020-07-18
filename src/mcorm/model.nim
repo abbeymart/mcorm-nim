@@ -15,21 +15,6 @@
 import ormtypes, times, tables
 
 # Examples:
-proc getCurrentDateTime(rec: FieldTemp): DateTime =
-    result = now().utc
-
-proc userDefaults(rec: FieldTemp): string =
-    result = "testing"
-     
-proc userValidation(rec: FieldTemp): bool =
-    result = true
-
-# Default fields: isActive, timestamp etc. | to be used when creating table with timeStamp set to true
-# let 
-#     createdByField = Field(fieldName: "createdby", fieldType: "string" )
-#     createdAtField = Field(fieldName: "createdat", fieldType: "datetime")
-#     updatedByField = Field(fieldName: "updatedby", fieldType: "string" )
-#     updatedAtField = Field(fieldName: "updatedat", fieldType: "datetime")
 
 type 
     Profile* = object
@@ -39,7 +24,7 @@ type
         dob*: DateTime
 
     # captures client/user's inputs (from ui-form, RESTFUL-json-api, websocket, rpc etc.)
-    UserValue* =  object
+    UserRecord* =  object
         id*: string
         username*: string
         email*: string
@@ -51,21 +36,30 @@ type
         lang*: string
         desc*: string
         isActive*: bool
-        fullName*: proc(user: UserValue): string 
+        fullName*: proc(user: UserRecord): string 
     
     UserModel* = object
-        userValue*: UserValue
+        userRecord*: UserRecord
         userModel*: Model
 
-proc fullName(userModel: UserModel): string =
-    let userRec = userModel.userValue
+proc getCurrentDateTime(): DateTime =
+    result = now().utc
+
+proc defaults(rec: UserRecord): string =
+    result = "testing"
+     
+proc validations(rec: UserRecord): bool =
+    result = true
+
+proc fullName(userRecord: UserRecord): string =
+    let userRec = userRecord
     result = if userRec.middleName != "":
                 userRec.firstName & " " & userRec.middleName & " " & userRec.lastName
             else:
                  userRec.firstName & " " & userRec.lastName
 
 proc User(): UserModel =
-    result.userValue = UserValue()
+    result.userRecord = UserRecord()
     result.userModel = Model()
 
     result.userModel.modelName = "User"
@@ -75,7 +69,7 @@ proc User(): UserModel =
     result.userModel.record = initTable[string, FieldDesc]()
 
     # define user-model field descriptions from the userValue type
-    for name, _ in result.userValue.fieldPairs:
+    for name, _ in result.userRecord.fieldPairs:
         echo "TBD (may not be suitable due to customised fieldDesc)"
         result.userModel.record[name] = FieldDesc(
             fieldLength: 255
@@ -104,8 +98,8 @@ proc User(): UserModel =
     )
 
     # model methods/procs | initialize and/or define
-    result.userModel.defaultValues = @[]
-    result.userModel.constraints = @[]
-    result.userModel.methods = @[]
+    # result.userModel.defaults = @[]
+    # result.userModel.constraints = @[]
+    # result.userModel.methods = @[]
 
 echo "user-model: " & User().repr

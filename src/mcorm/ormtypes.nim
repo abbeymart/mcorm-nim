@@ -18,6 +18,8 @@ type
 
     ValueType* = int | string | float | bool | Positive | JsonNode | BiggestInt | BiggestFloat | Table | Database
 
+    FieldValueType* = int | string | float | bool | Positive | JsonNode | BiggestInt | BiggestFloat
+
     CreatedBy* = UUID
     UpdatedBy* = UUID
     CreatedAt* = DateTime
@@ -29,15 +31,12 @@ type
         updatedBy*: UpdatedBy
         updatedAt*: UpdatedAt
     
-    # FieldValueProc*[T, R] = proc(val: T): R {.closure.}
-    # RecordProc*[R] = proc(): R {.closure.}
-    # ModelProc*[T, R] = proc(rec: T): R {.closure.}
-    # ModelConstraint*[T] = proc(rec: T): bool {.closure.}
+    DefaultProc*[T, R] = proc(val: T): R {.closure.}
+    MethodProc*[T, R] = proc(rec: T): R {.closure.}
+    ConstraintProc*[T] = proc(rec: T): bool {.closure.}
+    SupplierProc*[R] = proc(): R {.closure.}
     # proc(val: Record): FieldValueType
     # proc(val: Record): bool
-    # ModelProc* = proc(rec: Field ): string | int | float | bool | DateTime | Time
-    # ModelProc* = proc(): string | int | float | bool | DateTime | Time
-    # ModelConstraint* = proc(rec: Field): bool | proc(): bool
 
     FieldDesc* = object
         fieldType*: string
@@ -49,13 +48,11 @@ type
         indexable*: bool
         primaryKey*: bool
         foreignKey*: bool
-        fieldValue*: string     # stringified field value to be casted into fieldType
         fieldMinValue*: float
         fieldMaxValue*: float
-    
+        fieldDefaultValue*: string     # TODO: stringified field value to be casted into fieldType
+        
     Record* = Table[string, FieldDesc ]
-
-    FieldValueType* = int | string | float | bool | Positive | JsonNode | BiggestInt | BiggestFloat
 
     Relation* = ref object
         relationType*: string   # one-to-one, one-to-many, many-to-one, many-to-many
@@ -63,19 +60,14 @@ type
         targetTable*: string
         targetFields*: seq[FieldDesc]
 
-    FieldValueProc*[T, R] = proc(val: T): R {.closure.}
-    RecordProc*[R] = proc(): R {.closure.}
-    ModelProc*[T, R] = proc(rec: T): R {.closure.}
-    ModelConstraint*[T] = proc(rec: T): bool {.closure.}
-
     Model* = ref object
         modelName*: string
         timeStamp*: bool
         record*: Record
         relations*: seq[Relation]
-        defaultValues*: seq[proc(val: Record): string] # fieldValue
-        constraints*: seq[proc(val: Record): bool]
-        methods*: seq[proc(val: Record): string] # fieldValue
+        # defaults*: seq[DefaultProc]
+        # constraints*: seq[ConstraintProc]
+        # methods*: seq[MethodProc]
     
     # Procedure to define new data model (R => Model)
     ModelConstructor* = proc(): Model
