@@ -4,9 +4,10 @@
 #       See the file "LICENSE.md", included in this
 #    distribution, for details a bout the copyright / license.
 # 
-#                   CRUD Package Types
+#                   ORM Package Types
 
-## CRUD types | centralised and exported types for all CRUD operations
+## ORM types | centralised and exported types for all ORM operations:
+## SQL-DDL (CREATE...), SQL-CRUD (INSERT, SELECT, UPDATE, DELETE...) operations
 ## 
 import json, db_postgres, tables, times
 import mcdb, mctranslog
@@ -17,52 +18,67 @@ type
 
     ValueType* = int | string | float | bool | Positive | JsonNode | BiggestInt | BiggestFloat | Table | Database
 
+    CreatedBy* = UUID
+    UpdatedBy* = UUID
+    CreatedAt* = DateTime
+    UpdatedAt* = DateTime
+
     TimeStamp* = object
-        createBy*: string
-        createdAt*: DateTime
-        updatedBy*: string
-        updatedAt*: DateTime
+        createdBy*: CreatedBy
+        createdAt*: CreatedAt
+        updatedBy*: UpdatedBy
+        updatedAt*: UpdatedAt
     
-    Field* = ref object
-        fieldName*: string
+    # FieldValueProc*[T, R] = proc(val: T): R {.closure.}
+    # RecordProc*[R] = proc(): R {.closure.}
+    # ModelProc*[T, R] = proc(rec: T): R {.closure.}
+    # ModelConstraint*[T] = proc(rec: T): bool {.closure.}
+    # proc(val: Record): FieldValueType
+    # proc(val: Record): bool
+    # ModelProc* = proc(rec: Field ): string | int | float | bool | DateTime | Time
+    # ModelProc* = proc(): string | int | float | bool | DateTime | Time
+    # ModelConstraint* = proc(rec: Field): bool | proc(): bool
+
+    FieldDesc* = object
         fieldType*: string
-        fieldLength*: uint
-        fieldPatern*: string # "![0-9]" => excluding digit 0 to 9 | "![_, -, \, /, *, |, ]" => exclude the charaters
+        fieldLength*: Positive
+        fieldPattern*: string # "![0-9]" => excluding digit 0 to 9 | "![_, -, \, /, *, |, ]" => exclude the charaters
         fieldFormat*: string # "12.2" => max 12 digits, including 2 digits after the decimal
         notNull*: bool
         unique*: bool
         indexable*: bool
         primaryKey*: bool
         foreignKey*: bool
+        fieldValue*: string     # stringified field value to be casted into fieldType
         fieldMinValue*: float
         fieldMaxValue*: float
     
-    # ModelProc* = proc(rec: Field ): string | int | float | bool | DateTime | Time
-    
-    # ModelProc* = proc(): string | int | float | bool | DateTime | Time
-
-    # ModelConstraint* = proc(rec: Field): bool | proc(): bool
-
-    ModelProc*[T, R] = proc(rec: T): R
-
-    ModelConstraint*[T] = proc(rec: T): bool
+    Record* = Table[string, FieldDesc ]
 
     FieldValueType* = int | string | float | bool | Positive | JsonNode | BiggestInt | BiggestFloat
 
     Relation* = ref object
         relationType*: string   # one-to-one, one-to-many, many-to-one, many-to-many
-        localField*: Field
-        foreignTable*: string
-        foreignFields*: seq[string]
+        sourceField*: FieldDesc
+        targetTable*: string
+        targetFields*: seq[FieldDesc]
 
-    ModelDesc* = ref object
+    FieldValueProc*[T, R] = proc(val: T): R {.closure.}
+    RecordProc*[R] = proc(): R {.closure.}
+    ModelProc*[T, R] = proc(rec: T): R {.closure.}
+    ModelConstraint*[T] = proc(rec: T): bool {.closure.}
+
+    Model* = ref object
         modelName*: string
         timeStamp*: bool
+        record*: Record
         relations*: seq[Relation]
-        fieldNames*: seq[string]
-        fieldProps*: seq[Field]
-        # modelDefaults*: seq[ModelProc[Field, FieldValueType ]]
-        # modelConstraints*: seq[ModelConstraint[Field]]
+        defaultValues*: seq[proc(val: Record): string] # fieldValue
+        constraints*: seq[proc(val: Record): bool]
+        methods*: seq[proc(val: Record): string] # fieldValue
+    
+    # Procedure to define new data model (R => Model)
+    ModelConstructor* = proc(): Model
 
     ## User/client information to be provided after successful login
     ## 
@@ -96,15 +112,6 @@ type
         fieldAlias*: string ## for SELECT/Read query
         show*: bool     ## includes or excludes from the SELECT query fields
         fieldFunction*: string ## COUNT, MIN, MAX... for select/read-query...
-
-    # CollItem = object
-    #     collName*: string
-    #     collAlias*: string
-    #     collOrder*: int
-
-    # WhereInSelect = object
-    #     selectColl*: string
-    #     selectField*: FieldItem
 
     WhereParam* = object
         groupCat*: string       # group (items) categorization
@@ -144,7 +151,6 @@ type
         defaultMessage*: string 
         orderBy*: bool
         asField*: string
-
 
     SelectFromParam* = object
         collName*: string

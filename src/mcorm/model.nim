@@ -12,23 +12,24 @@
 ## 
 
 # types
-import ormtypes, times
+import ormtypes, times, tables
 
 # Examples:
-proc getCurrentDateTime(rec: Field): DateTime =
+proc getCurrentDateTime(rec: FieldTemp): DateTime =
     result = now().utc
 
-proc userDefaults(rec: Field): string =
-    result = "testing" 
-proc userValidation(rec: Field): bool =
+proc userDefaults(rec: FieldTemp): string =
+    result = "testing"
+     
+proc userValidation(rec: FieldTemp): bool =
     result = true
 
 # Default fields: isActive, timestamp etc. | to be used when creating table with timeStamp set to true
-let 
-    createdByField = Field(fieldName: "createdby", fieldType: "string" )
-    createdAtField = Field(fieldName: "createdat", fieldType: "datetime")
-    updatedByField = Field(fieldName: "updatedby", fieldType: "string" )
-    updatedAtField = Field(fieldName: "updatedat", fieldType: "datetime")
+# let 
+#     createdByField = Field(fieldName: "createdby", fieldType: "string" )
+#     createdAtField = Field(fieldName: "createdat", fieldType: "datetime")
+#     updatedByField = Field(fieldName: "updatedby", fieldType: "string" )
+#     updatedAtField = Field(fieldName: "updatedat", fieldType: "datetime")
 
 type 
     Profile* = object
@@ -37,7 +38,8 @@ type
         defaultLanguage*: string
         dob*: DateTime
 
-    UserModel* =  object
+    # captures client/user's inputs (from ui-form, RESTFUL-json-api, websocket, rpc etc.)
+    UserValue* =  object
         id*: string
         username*: string
         email*: string
@@ -49,54 +51,61 @@ type
         lang*: string
         desc*: string
         isActive*: bool
-        fullName*: proc(user: UserModel): string 
+        fullName*: proc(user: UserValue): string 
+    
+    UserModel* = object
+        userValue*: UserValue
+        userModel*: Model
 
-proc UserDesc(): ModelDesc =
-    result.modelName = "User"
-    result.fieldNames= @["id", "username", "firstName", "lastName"]
-    result.fieldProps = @[
-        Field(
-            fieldName: "id",
-            fieldType: "string",
-            fieldLength: 64,
-            notNull: true,
-            primaryKey: true,
-        ),
-        Field(
-            fieldName: "username",
-            fieldType: "string",
-            fieldLength: 64,
-            notNull: true,
-        ),
-    ]
-
-    result.timeStamp = true
-
-proc fullName(user: UserModel): string =
-    result = if user.middleName != "":
-                user.firstName & " " & user.middleName & " " & user.lastName
+proc fullName(userModel: UserModel): string =
+    let userRec = userModel.userValue
+    result = if userRec.middleName != "":
+                userRec.firstName & " " & userRec.middleName & " " & userRec.lastName
             else:
-                 user.firstName & " " & user.lastName
+                 userRec.firstName & " " & userRec.lastName
 
+proc User(): UserModel =
+    result.userValue = UserValue()
+    result.userModel = Model()
 
+    result.userModel.modelName = "User"
+    result.userModel.timeStamp = true
+    
+    # table structure / model definitions
+    result.userModel.record = initTable[string, FieldDesc]()
 
+    # define user-model field descriptions from the userValue type
+    for name, _ in result.userValue.fieldPairs:
+        echo "TBD (may not be suitable due to customised fieldDesc)"
+        result.userModel.record[name] = FieldDesc(
+            fieldLength: 255
+        )
 
-# var User: Model = Model(
-#     modelName: "users",
-#     fieldItems: @[
-#         Field(
-#             fieldName: "id",
-#             fieldType: "uuid",
-#             fieldLength: 64,
-#             notNull: true,
-#             primaryKey: true,
-#         ),
-#         Field(
-#             fieldName: "username",
-#             fieldType: "string",
-#             fieldLength: 64,
-#             notNull: true,
-#         ),
-#     ]
-# )
-# echo "user-model: " & User.repr
+    result.userModel.record["id"] = FieldDesc(
+        fieldType: "UUID",
+        fieldLength: 255,
+        fieldPattern: "![0-9]", # exclude digit 0 to 9 | "![_, -, \, /, *, |, ]" => exclude the charaters
+        fieldFormat: "12.2", # => max 12 digits, including 2 digits after the decimal
+        notNull: true,
+        unique: true,
+        indexable: true,
+        primaryKey: true,
+        foreignKey: true,
+        # fieldMinValue*: float
+        # fieldMaxValue*: float
+    )
+
+    result.userModel.record["firstName"] = FieldDesc(
+        fieldType: "string",
+        fieldLength: 255,
+        fieldPattern: "[a-zA-Z]",
+        fieldFormat: "XXXXXXXXXX",
+        notNull: true,
+    )
+
+    # model methods/procs | initialize and/or define
+    result.userModel.defaultValues = @[]
+    result.userModel.constraints = @[]
+    result.userModel.methods = @[]
+
+echo "user-model: " & User().repr

@@ -17,44 +17,6 @@ type
 
     UUID* = string
 
-    Relation* = object
-        relationType*: string   # one-to-one, one-to-many, many-to-many
-        foreignTable*: string
-        foreignFields*: seq[string]
-
-    TimeStamp* = object
-        createBy: string
-        createdAt: DateTime
-        updatedBy: string
-        updatedAt: DateTime
-
-    Field* = ref object
-        fieldName*: string
-        fieldType*: typedesc
-        fieldLength*: uint
-        fieldPatern*: string # "![0-9]" => excluding digit 0 to 9 | "![_, -, \, /, *, |, ]" => exclude the charaters
-        fieldFormat*: string # "12.2" => max 12 digits, including 2 digits after the decimal
-        notNull*: bool
-        unique*: bool
-        indexable*: bool
-        primaryKey*: bool
-        foreignKey*: Relation
-        fieldDefaultValue*: proc(rec: Field): string | int | float | bool
-        fieldMinValue*: float
-        fieldMaxValue*: float
-
-    Function* = object
-        funcName*: string
-    
-    Model* = ref object
-        modelName*: string
-        partOf*: string     # e.g. employee is part of a department
-        partsOf*: string     # e.g. employee is part of more than one department
-        partOfField*: seq[string]
-        contains*: string # e.g. department may contains employees
-        fieldItems*: seq[Field]
-        timeStamp*: bool
-
     ## User/client information to be provided after successful login
     ## 
     UserParam* = object
