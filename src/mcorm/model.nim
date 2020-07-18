@@ -45,11 +45,17 @@ type
 proc getCurrentDateTime(): DateTime =
     result = now().utc
 
-proc defaults(rec: UserRecord): string =
-    result = "testing"
+proc defaults(rec: UserRecord): seq[Default] =
+    result = @[]
+
+proc methods(rec: UserRecord): seq[Method] =
+    result = @[]
+
+proc constraints(rec: UserRecord): seq[Constraints] =
+    result = @[]
      
-proc validations(rec: UserRecord): bool =
-    result = true
+proc validations(rec: UserRecord): seq[Validation] =
+    result = @[]
 
 proc fullName(userRecord: UserRecord): string =
     let userRec = userRecord
@@ -98,8 +104,9 @@ proc User(): UserModel =
     )
 
     # model methods/procs | initialize and/or define
-    # result.userModel.defaults = @[]
-    # result.userModel.constraints = @[]
-    # result.userModel.methods = @[]
+    result.userModel.defaults = defaults(result.userRecord)
+    result.userModel.validations = validations(result.userRecord)
+    result.userModel.constraints = constraints(result.userRecord)
+    result.userModel.methods = methods(result.userRecord)
 
 echo "user-model: " & User().repr

@@ -33,10 +33,36 @@ type
     
     DefaultProc*[T, R] = proc(val: T): R {.closure.}
     MethodProc*[T, R] = proc(rec: T): R {.closure.}
+    ValidationProc*[T] = proc(rec: T): bool {.closure.}
     ConstraintProc*[T] = proc(rec: T): bool {.closure.}
     SupplierProc*[R] = proc(): R {.closure.}
     # proc(val: Record): FieldValueType
     # proc(val: Record): bool
+
+    Default* = object
+        fieldName*: string
+        fieldType*: string
+        fieldValue*: string  # stringified field value to be casted into fieldType
+
+    Method* = object
+        methodName*: string
+        valueType*: string
+        value*: string  # stringified field value to be casted into fieldType
+
+    Validation* = object
+        fieldName*: string
+        fieldValid*: bool
+    
+    Constraint* = object
+        fieldName*: string
+        fieldOp*: string
+        fieldValue*: bool
+
+    Constraints* = object
+        constraintGroup*: string
+        constraintOp*: string
+        constraintOrder*: int
+        constraintItems*: seq[Constraint]
 
     FieldDesc* = object
         fieldType*: string
@@ -50,7 +76,7 @@ type
         foreignKey*: bool
         fieldMinValue*: float
         fieldMaxValue*: float
-        fieldDefaultValue*: string     # TODO: stringified field value to be casted into fieldType
+        fieldDefaultValue*: Default     # TODO: stringified field value to be casted into fieldType
         
     Record* = Table[string, FieldDesc ]
 
@@ -65,9 +91,10 @@ type
         timeStamp*: bool
         record*: Record
         relations*: seq[Relation]
-        # defaults*: seq[DefaultProc]
-        # constraints*: seq[ConstraintProc]
-        # methods*: seq[MethodProc]
+        defaults*: seq[Default]
+        validations*: seq[Validation]
+        constraints*: seq[Constraints]
+        methods*: seq[Method]
     
     # Procedure to define new data model (R => Model)
     ModelConstructor* = proc(): Model
