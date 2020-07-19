@@ -41,7 +41,6 @@ type
     ProcedureTypes* = enum
         PROC,              ## proc(): T
         VALIDATEPROC,      ## proc(val: T): bool
-        CONSTRAINTPROC,    ## proc(val: T): bool
         DEFAULTPROC,       ## proc(): T
         UNARYPROC,         ## proc(val: T): T
         BIPROC,            ## proc(valA, valB: T): T
@@ -93,7 +92,6 @@ type
     DefaultProcedureType*[R] = proc(): R {.closure.}
     MethodProcedureType*[T, R] = proc(rec: T): R {.closure.}
     ValidateProcedureType*[T] = proc(rec: T): bool {.closure.}
-    ConstraintProcedureType*[T] = proc(rec: T): bool {.closure.}
     SupplierProceduceType*[R] = proc(): R {.closure.}
 
     DefaultValueType* = object
@@ -103,10 +101,6 @@ type
     ValidateType* = object
         fieldName*: string
         validateProc*: proc(): bool
-
-    ConstraintType* = object
-        fieldName*: string
-        constraintProc*: proc(): bool
 
     MethodType* = object
         fieldNames*: seq[string]
@@ -142,10 +136,9 @@ type
         recordDesc*: RecordDescType
         timeStamp*: bool
         relations*: seq[RelationType]
-        defaults*: seq[ProcedureTypes]
-        validations*: seq[ProcedureTypes]
-        constraints*: seq[ProcedureTypes]
-        methods*: seq[ProcedureTypes]
+        defaults*: seq[DefaultValueType]
+        validations*: seq[ValidateType]
+        methods*: seq[MethodType]
         appDb*: Database
 
     ## User/client information to be provided after successful login
@@ -266,7 +259,7 @@ type
         
     QueryParamType* = object        # TODO: Generic => make specific to CRUD operations
         tableName*: string    ## default: "" => will use instance tableName instead
-        fields*: seq[FieldItemType]   ## @[] => SELECT * (all fields)
+        fields*: seq[FieldDescType]   ## @[] => SELECT * (all fields)
         where*: seq[WhereParamType] ## whereParams or docId(s)  will be required for delete task
 
     ## For SELECT TOP... query
@@ -276,7 +269,7 @@ type
     
     ## SELECT CASE... query condition(s)
     CaseConditionType* = object
-        fields*: seq[FieldItemType]
+        fields*: seq[FieldDescType]
         resultMessage*: string
         resultField*: string  ## for ORDER BY options
 

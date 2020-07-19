@@ -22,10 +22,9 @@ proc newModel(appDb: Database;
         recordDesc: RecordDescType;
         timeStamp: bool;
         relations: seq[RelationType];
-        defaults: seq[ProcedureTypes];
-        validations: seq[ProcedureTypes];
-        constraints: seq[ProcedureTypes];
-        methods: seq[ProcedureTypes]): ModelType =
+        defaults: seq[DefaultValueType];
+        validations: seq[ValidateType];
+        methods: seq[MethodType]): ModelType =
     result.appDb = appDb
     result.modelName = modelName
     result.tableName = tableName
@@ -34,7 +33,6 @@ proc newModel(appDb: Database;
     result.relations = relations
     result.defaults = defaults
     result.validations = validations
-    result.constraints = constraints
     result.methods = methods
 
 # CRUD constructor : imported
@@ -44,13 +42,17 @@ proc createTable(model: ModelType): ResponseMessage =
     result = getResMessage("success", ResponseMessage())
 
 proc getRecords(crud: CrudParamType): void = 
-    echo "get all records"
+    echo "get records"
 
 proc getRecord(crud: CrudParamType): void = 
-    echo "get all record"
+    echo "get record(s)"
 
 proc saveRecord(crud: CrudParamType): void = 
-    echo "get all record"
+    echo "save record(s)"
+
+proc deleteRecord(crud: CrudParamType): void = 
+    echo "delete record"
+
 
 # Examples:
 
@@ -86,9 +88,6 @@ proc defaults(rec: ModelType): seq[ProcedureTypes] =
 
 proc methods(rec: ModelType): seq[ProcedureTypes] =
     result = @[]
-
-proc constraints(rec: ModelType): seq[ProcedureTypes] =
-    result = @[]
      
 proc validations(rec: ModelType): seq[ProcedureTypes] =
     result = @[]
@@ -115,7 +114,7 @@ proc UserModel(): ModelType =
         timeStamp = true
     
     # Table structure / model definitions
-    var recordDesc = initTable[string, FieldDesc]()
+    var recordDesc = initTable[string, FieldDescType]()
     
     # Model recordDesc definition
     recordDesc["id"] = FieldDesc(
