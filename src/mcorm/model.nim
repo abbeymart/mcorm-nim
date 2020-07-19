@@ -38,9 +38,9 @@ type
         isActive*: bool
         fullName*: proc(user: UserRecord): string 
     
-    UserModel* = object
-        userRecord*: UserRecord
-        userModel*: Model
+    # UserModel* = object
+    #     userRecord*: UserRecord
+    #     userModel*: Model
 
 proc getCurrentDateTime(): DateTime =
     result = now().utc
@@ -57,8 +57,8 @@ proc constraints(rec: Model): seq[ProcedureTypes] =
 proc validations(rec: Model): seq[ProcedureTypes] =
     result = @[]
 
-proc fullName(userRecord: UserRecord): string =
-    let userRec = userRecord
+proc fullName(rec: UserRecord): string =
+    let userRec = rec
     result = if userRec.middleName != "":
                 userRec.firstName & " " & userRec.middleName & " " & userRec.lastName
             else:
@@ -72,10 +72,11 @@ proc User(): Model =
     result.timeStamp = true
     
     # table structure / model definitions
-    result.record = initTable[string, FieldDesc]()
-    result.value = initTable[string, DataTypes]()
+    result.recordDesc = initTable[string, FieldDesc]()
+    result.fieldTypes = initTable[string, DataTypes]()
 
-    result.record["id"] = FieldDesc(
+    # Model recordDesc definition
+    result.recordDesc["id"] = FieldDesc(
         fieldType: DataTypes.UUID,
         fieldLength: 255,
         fieldPattern: "![0-9]", # exclude digit 0 to 9 | "![_, -, \, /, *, |, ]" => exclude the charaters
@@ -89,13 +90,26 @@ proc User(): Model =
         # fieldMaxValue*: float
     )
 
-    result.record["firstName"] = FieldDesc(
+    result.recordDesc["firstName"] = FieldDesc(
         fieldType: DataTypes.STRING,
         fieldLength: 255,
         fieldPattern: "[a-zA-Z]",
         fieldFormat: "XXXXXXXXXX",
         notNull: true,
     )
+
+    # model recordDesc-field-fieldTypes definition
+    result.fieldTypes["id"] = DataTypes.UUID
+    result.fieldTypes["username"] = DataTypes.STRING
+    result.fieldTypes["email"] = DataTypes.STRING
+    result.fieldTypes["recoveryEmail"] = DataTypes.STRING
+    result.fieldTypes["firstName"] = DataTypes.STRING
+    result.fieldTypes["middleName"] = DataTypes.STRING
+    result.fieldTypes["lastName"] = DataTypes.STRING
+    result.fieldTypes["profile"] = DataTypes.JSON
+    result.fieldTypes["lang"] = DataTypes.STRING
+    result.fieldTypes["desc"] = DataTypes.STRING
+    result.fieldTypes["isActive"] = DataTypes.BOOL
 
     # model methods/procs | initialize and/or define
     result.defaults = defaults(result)

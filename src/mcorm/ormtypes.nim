@@ -16,6 +16,7 @@ import mcdb, mctranslog
 type
     DataTypes* = enum
         STRING,
+        TEXT,
         UUID,
         POSITIVE,
         INT,
@@ -109,8 +110,8 @@ type
         fieldMaxValue*: float
         fieldDefaultValue*: ProcedureTypes
         
-    Record* = Table[string, FieldDesc ]
-    Value* = Table[string, DataTypes ]
+    RecordDesc* = Table[string, FieldDesc ]
+    FieldTypes* = Table[string, DataTypes ]
 
     Relation* = ref object
         relationType*: string   # one-to-one, one-to-many, many-to-one, many-to-many
@@ -120,8 +121,8 @@ type
 
     Model* = ref object
         modelName*: string
-        record*: Record
-        value*: Value
+        recordDesc*: RecordDesc
+        fieldTypes*: FieldTypes
         timeStamp*: bool
         relations*: seq[Relation]
         defaults*: seq[ProcedureTypes]
