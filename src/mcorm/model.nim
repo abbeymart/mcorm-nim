@@ -45,16 +45,16 @@ type
 proc getCurrentDateTime(): DateTime =
     result = now().utc
 
-proc defaults(rec: UserRecord): seq[Default] =
+proc defaults(rec: Model): seq[ProcedureTypes] =
     result = @[]
 
-proc methods(rec: UserRecord): seq[Method] =
+proc methods(rec: Model): seq[ProcedureTypes] =
     result = @[]
 
-proc constraints(rec: UserRecord): seq[Constraints] =
+proc constraints(rec: Model): seq[ProcedureTypes] =
     result = @[]
      
-proc validations(rec: UserRecord): seq[Validation] =
+proc validations(rec: Model): seq[ProcedureTypes] =
     result = @[]
 
 proc fullName(userRecord: UserRecord): string =
@@ -64,24 +64,18 @@ proc fullName(userRecord: UserRecord): string =
             else:
                  userRec.firstName & " " & userRec.lastName
 
-proc User(): UserModel =
-    result.userRecord = UserRecord()
-    result.userModel = Model()
+proc User(): Model =
+    # result.userRecord = UserRecord()
+    # result.userModel = Model()
 
-    result.userModel.modelName = "User"
-    result.userModel.timeStamp = true
+    result.modelName = "User"
+    result.timeStamp = true
     
     # table structure / model definitions
-    result.userModel.record = initTable[string, FieldDesc]()
+    result.record = initTable[string, FieldDesc]()
+    result.value = initTable[string, DataTypes]()
 
-    # define user-model field descriptions from the userValue type
-    for name, _ in result.userRecord.fieldPairs:
-        echo "TBD (may not be suitable due to customised fieldDesc)"
-        result.userModel.record[name] = FieldDesc(
-            fieldLength: 255
-        )
-
-    result.userModel.record["id"] = FieldDesc(
+    result.record["id"] = FieldDesc(
         fieldType: DataTypes.UUID,
         fieldLength: 255,
         fieldPattern: "![0-9]", # exclude digit 0 to 9 | "![_, -, \, /, *, |, ]" => exclude the charaters
@@ -95,7 +89,7 @@ proc User(): UserModel =
         # fieldMaxValue*: float
     )
 
-    result.userModel.record["firstName"] = FieldDesc(
+    result.record["firstName"] = FieldDesc(
         fieldType: DataTypes.STRING,
         fieldLength: 255,
         fieldPattern: "[a-zA-Z]",
@@ -104,9 +98,9 @@ proc User(): UserModel =
     )
 
     # model methods/procs | initialize and/or define
-    result.userModel.defaults = defaults(result.userRecord)
-    result.userModel.validations = validations(result.userRecord)
-    result.userModel.constraints = constraints(result.userRecord)
-    result.userModel.methods = methods(result.userRecord)
+    result.defaults = defaults(result)
+    result.validations = validations(result)
+    result.constraints = constraints(result)
+    result.methods = methods(result)
 
 echo "user-model: " & User().repr
