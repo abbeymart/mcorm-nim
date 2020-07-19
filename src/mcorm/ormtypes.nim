@@ -121,8 +121,9 @@ type
 
     Model* = ref object
         modelName*: string
+        tableName*: string
         recordDesc*: RecordDesc
-        fieldTypes*: FieldTypes
+        # fieldTypes*: FieldTypes
         timeStamp*: bool
         relations*: seq[Relation]
         defaults*: seq[ProcedureTypes]

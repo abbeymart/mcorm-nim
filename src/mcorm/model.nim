@@ -46,15 +46,12 @@ proc getCurrentDateTime(): DateTime =
     result = now().utc
 
 proc User(): Model =
-    # result.userRecord = UserRecord()
-    # result.userModel = Model()
-
     result.modelName = "User"
+    result.tableName = "users"
     result.timeStamp = true
     
     # table structure / model definitions
     result.recordDesc = initTable[string, FieldDesc]()
-    result.fieldTypes = initTable[string, DataTypes]()
 
     # Model recordDesc definition
     result.recordDesc["id"] = FieldDesc(
@@ -78,19 +75,6 @@ proc User(): Model =
         fieldFormat: "XXXXXXXXXX",
         notNull: true,
     )
-
-    # model recordDesc-field-fieldTypes definition
-    result.fieldTypes["id"] = DataTypes.UUID
-    result.fieldTypes["username"] = DataTypes.STRING
-    result.fieldTypes["email"] = DataTypes.STRING
-    result.fieldTypes["recoveryEmail"] = DataTypes.STRING
-    result.fieldTypes["firstName"] = DataTypes.STRING
-    result.fieldTypes["middleName"] = DataTypes.STRING
-    result.fieldTypes["lastName"] = DataTypes.STRING
-    result.fieldTypes["profile"] = DataTypes.JSON
-    result.fieldTypes["lang"] = DataTypes.STRING
-    result.fieldTypes["desc"] = DataTypes.STRING
-    result.fieldTypes["isActive"] = DataTypes.BOOL
 
     # model methods/procs | initialize and/or define
     # result.defaults = defaults(result)
