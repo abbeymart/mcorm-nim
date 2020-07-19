@@ -54,7 +54,7 @@ type
         COMPARATORPROC,    ## proc(valA, valB: T): int
         MODELPROC,         ## proc(): Model  | to define new data model
 
-    Op* = enum
+    OpTypes* = enum
         AND,
         OR,
         NE,
@@ -81,22 +81,22 @@ type
         ANY,
         ALL,
 
-    Order* = enum
+    OrderTypes* = enum
         ASC,
         DESC,
 
-    CreatedBy* = DataTypes
-    UpdatedBy* = DataTypes
-    CreatedAt* = DateTime
-    UpdatedAt* = DateTime
+    CreatedByType* = DataTypes
+    UpdatedByType* = DataTypes
+    CreatedAtType* = DateTime
+    UpdatedAtType* = DateTime
     
-    DefaultProcedure*[T, R] = proc(val: T): R {.closure.}
-    MethodProcedure*[T, R] = proc(rec: T): R {.closure.}
-    ValidationProcedure*[T] = proc(rec: T): bool {.closure.}
-    ConstraintProcedure*[T] = proc(rec: T): bool {.closure.}
-    SupplierProcedure*[R] = proc(): R {.closure.}
+    DefaultProcType*[T, R] = proc(val: T): R {.closure.}
+    MethodProceType*[T, R] = proc(rec: T): R {.closure.}
+    ValidationProcType*[T] = proc(rec: T): bool {.closure.}
+    ConstraintProcType*[T] = proc(rec: T): bool {.closure.}
+    SupplierProcType*[R] = proc(): R {.closure.}
 
-    FieldDesc* = object
+    FieldDescType* = object
         fieldType*: DataTypes
         fieldLength*: Positive
         fieldPattern*: string # "![0-9]" => excluding digit 0 to 9 | "![_, -, \, /, *, |, ]" => exclude the charaters
@@ -110,21 +110,21 @@ type
         fieldMaxValue*: float
         fieldDefaultValue*: ProcedureTypes
         
-    RecordDesc* = Table[string, FieldDesc ]
+    RecordDescType* = Table[string, FieldDescType ]
     FieldTypes* = Table[string, DataTypes ]
 
-    Relation* = ref object
+    RelationType* = ref object
         relationType*: string   # one-to-one, one-to-many, many-to-one, many-to-many
-        sourceField*: FieldDesc
+        sourceField*: FieldDescType
         targetTable*: string
-        targetFields*: seq[FieldDesc]
+        targetFields*: seq[FieldDescType]
 
     ModelType* = ref object
         modelName*: string
         tableName*: string
-        recordDesc*: RecordDesc
+        recordDesc*: RecordDescType
         timeStamp*: bool
-        relations*: seq[Relation]
+        relations*: seq[RelationType]
         defaults*: seq[ProcedureTypes]
         validations*: seq[ProcedureTypes]
         constraints*: seq[ProcedureTypes]
@@ -134,10 +134,9 @@ type
     Model* = ref object
         modelName*: string
         tableName*: string
-        recordDesc*: RecordDesc
-        # fieldTypes*: FieldTypes
+        recordDesc*: RecordDescType
         timeStamp*: bool
-        relations*: seq[Relation]
+        relations*: seq[RelationType]
         defaults*: seq[ProcedureTypes]
         validations*: seq[ProcedureTypes]
         constraints*: seq[ProcedureTypes]
@@ -146,7 +145,7 @@ type
 
     ## User/client information to be provided after successful login
     ## 
-    UserParam* = object
+    UserParamType* = object
         id*: string         # stored as uuid in the DB
         firstName*: string
         lastName*: string
@@ -161,18 +160,18 @@ type
     # groupOp/groupLinkOp: AND | OR
     # groupCat: user-defined, e.g. "age-policy", "demo-group"
     # groupOrder: user-defined e.g. 1, 2...
-    FieldItem* = object
+    FieldItemType* = object
         fieldTable*: string
         fieldName*: string
         fieldType*: DataTypes   ## "int", "string", "bool", "boolean", "float",...
         fieldOrder*: Positive
-        fieldOp*: Op    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
+        fieldOp*: OpTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
         fieldValue*: string  ## for insert/update | start value for range/BETWEEN/NOTBETWEEN and pattern for LIKE operators
         fieldValueEnd*: string   ## end value for range/BETWEEN/NOTBETWEEN operator
         fieldValues*: seq[string] ## values for IN/NOTIN operator
         fieldSubQuery*: QueryParam ## for WHERE IN (SELECT field from fieldTable)
-        fieldPostOp*: Op ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
-        groupOp*: Op     ## e.g. AND | OR...
+        fieldPostOp*: OpTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
+        groupOp*: OpTypes     ## e.g. AND | OR...
         fieldAlias*: string ## for SELECT/Read query
         show*: bool     ## includes or excludes from the SELECT query fields
         fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
@@ -208,40 +207,40 @@ type
     WhereFieldType* = object
         fieldName*: string
         fieldOrder*: Positive
-        fieldOp*: Op    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
+        fieldOp*: OpTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
         fieldValue*: string  ## for insert/update | start value for range/BETWEEN/NOTBETWEEN and pattern for LIKE operators
         fieldValueEnd*: string   ## end value for range/BETWEEN/NOTBETWEEN operator
         fieldValues*: seq[string] ## values for IN/NOTIN operator
         fieldSubQuery*: QueryParam ## for WHERE IN (SELECT field from fieldTable)
-        fieldPostOp*: Op ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
-        groupOp*: Op     ## e.g. AND | OR...
+        fieldPostOp*: OpTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
+        groupOp*: OpTypes     ## e.g. AND | OR...
         fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
 
-    WhereParam* = object
+    WhereParamType* = object
         groupCat*: string       # group (items) categorization
-        groupLinkOp*: Op        # group relationship to the next group (AND, OR)
+        groupLinkOp*: OpTypes        # group relationship to the next group (AND, OR)
         groupOrder*: Positive        # group order, the last group groupLinkOp should be "" or will be ignored
         groupItems*: seq[WhereFieldType] # group items to be composed by category
 
-    SaveParam* = object
+    SaveParamType* = object
         tableName*: string
         fields*: seq[SaveFieldType]
     
-    CreateParam* = object
+    CreateParamType* = object
         tableName*: string
         fields*: seq[CreateFieldType]
     
-    UpdateParam* = object
+    UpdateParamType* = object
         tableName*: string
         fields*: seq[UpdateFieldType]
         where*: seq[WhereFieldType]
     
-    ReadParam* = object
+    ReadParamType* = object
         tableName*: string
         fields*: seq[ReadFieldType]
         where*: seq[WhereFieldType]
     
-    DeleteParam* = object
+    DeleteParamType* = object
         tableName*: string
         fields*: seq[DeleteFieldType]
         where*: seq[WhereFieldType]
@@ -253,12 +252,12 @@ type
     ## otherwise the only the first function-matching field will be used, as applicable
     QueryProc* = object
         functionType*: ProcedureTypes
-        fieldItems*: seq[FieldItem]
+        fieldItems*: seq[FieldItemType]
         
     QueryParam* = object        # TODO: Generic => make specific to CRUD operations
         tableName*: string    ## default: "" => will use instance tableName instead
-        fieldItems*: seq[FieldItem]   ## @[] => SELECT * (all fields)
-        whereParams*: seq[WhereParam] ## whereParams or docId(s)  will be required for delete task
+        fieldItems*: seq[FieldItemType]   ## @[] => SELECT * (all fields)
+        whereParams*: seq[WhereParamType] ## whereParams or docId(s)  will be required for delete task
 
     ## For SELECT TOP... query
     QueryTop* = object         
@@ -266,83 +265,83 @@ type
         topUnit*: string ## number or percentage (# or %)
     
     ## SELECT CASE... query condition(s)
-    CaseCondition* = object
-        fieldItems*: seq[FieldItem]
+    CaseConditionType* = object
+        fieldItems*: seq[FieldItemType]
         resultMessage*: string
         resultField*: string  ## for ORDER BY options
 
     ## For SELECT CASE... query
-    CaseQueryParam* = object
-        conditions*: seq[CaseCondition]
+    CaseQueryParamType* = object
+        conditions*: seq[CaseConditionType]
         defaultField*: string   ## for ORDER BY options
         defaultMessage*: string 
         orderBy*: bool
         asField*: string
 
-    SelectFromParam* = object
+    SelectFromParamType* = object
         tableName*: string
-        fieldItems*: seq[FieldItem]
+        fieldItems*: seq[FieldItemType]
 
-    InsertIntoParam* = object
+    InsertIntoParamType* = object
         tableName*: string
-        fieldItems*: seq[FieldItem]
+        fieldItems*: seq[FieldItemType]
 
-    GroupParam* = object
+    GroupParamType* = object
         fieldName*: string
         fieldOrder*: int
 
-    OrderParam* = object
+    OrderParamType* = object
         tableName*: string
         fieldName*: string
         queryProc*: ProcedureTypes
-        fieldOrder*: Order ## "ASC" ("asc") | "DESC" ("desc")
-        functionOrder*: Order
+        fieldOrder*: OrderTypes ## "ASC" ("asc") | "DESC" ("desc")
+        functionOrder*: OrderTypes
 
     # for aggregate query condition
-    HavingParam* = object
+    HavingParamType* = object
         tableName: string
         queryProc*: ProcedureTypes
-        queryOp*: Op
+        queryOp*: OpTypes
         queryOpValue*: string ## value will be cast to fieldType in queryProc
-        orderType*: Order ## "ASC" ("asc") | "DESC" ("desc")
+        orderType*: OrderTypes ## "ASC" ("asc") | "DESC" ("desc")
         # subQueryParams*: SubQueryParam # for ANY, ALL, EXISTS...
 
-    SubQueryParam* = object
+    SubQueryParamType* = object
         whereType*: string   ## EXISTS, ANY, ALL
         whereField*: string  ## for ANY / ALL | Must match the fieldName in queryParam
-        whereOp*: Op     ## e.g. "=" for ANY / ALL
+        whereOp*: OpTypes     ## e.g. "=" for ANY / ALL
         queryParams*: QueryParam
-        queryWhereParams*: WhereParam
+        queryWhereParams*: WhereParamType
 
     ## combined/joined query (read) param-type
-    JoinSelectField* =  object
+    JoinSelectFieldType* =  object
         tableName*: string
-        collFields*: seq[FieldItem]
+        collFields*: seq[FieldItemType]
     
-    JoinField* = object
+    JoinFieldType* = object
         tableName*: string
         joinField*: string
 
-    JoinQueryParam* = object
+    JoinQueryParamType* = object
         selectFromColl*: string ## default to tableName
-        selectFields*: seq[JoinSelectField]
+        selectFields*: seq[JoinSelectFieldType]
         joinType*: string ## INNER (JOIN), OUTER (LEFT, RIGHT & FULL), SELF...
-        joinFields*: seq[JoinField] ## [{tableName: "abc", joinField: "field1" },]
+        joinFields*: seq[JoinFieldType] ## [{tableName: "abc", joinField: "field1" },]
     
-    SelectIntoParam* = object
-        selectFields*: seq[FieldItem] ## @[] => SELECT *
+    SelectIntoParamType* = object
+        selectFields*: seq[FieldItemType] ## @[] => SELECT *
         intoColl*: string          ## new table/collection
         fromColl*: string          ## old/external table/collection
         fromFilename*: string      ## IN external DB file, e.g. backup.mdb
-        whereParam*: seq[WhereParam]
-        joinParam*: JoinQueryParam ## for copying from more than one table/collection
+        WhereParamType*: seq[WhereParamType]
+        joinParam*: JoinQueryParamType ## for copying from more than one table/collection
 
-    UnionQueryParam* = object
+    UnionQueryParamType* = object
         selectQueryParams*: seq[QueryParam]
-        whereParams*: seq[WhereParam]
-        orderParams*: seq[OrderParam]
+        whereParams*: seq[WhereParamType]
+        orderParams*: seq[OrderParamType]
 
-    RoleService* = object
+    RoleServiceType* = object
         serviceId*: string
         group*    : string
         category* : string
@@ -358,7 +357,7 @@ type
         userRoles*: JsonNode
         isActive*: bool
         isAdmin*: bool
-        roleServices*: seq[RoleService]
+        roleServices*: seq[RoleServiceType]
         collId*: string
 
     OkayResponse* = object
@@ -387,7 +386,7 @@ type
 
 
     ## Shared CRUD Operation Types  
-    CrudParam* = ref object
+    CrudParamType* = ref object
         ## tableName: table/collection to insert, update, read or delete record(s).
         tableName*: string 
         docIds*: seq[string]  ## for update, delete and read tasks
@@ -401,26 +400,26 @@ type
         ## Bulk Insert Operation: 
         ## insertToParams {tableName: "abc", fieldNames: @["field1", "field2"]}
         ## For tableName: "" will use the default constructor tableName
-        insertIntoParams*: seq[InsertIntoParam]
+        insertIntoParams*: seq[InsertIntoParamType]
         ## selectFromParams =
         ## {tableName: "abc", fieldNames: @["field1", "field2"]}
         ## the order and types of insertIntoParams' & selectFromParams' fields must match, otherwise ValueError exception will occur
         ## 
-        selectFromParams*: seq[SelectFromParam]
-        selectIntoParams*: seq[SelectIntoParam]
+        selectFromParams*: seq[SelectFromParamType]
+        selectIntoParams*: seq[SelectIntoParamType]
         ## Query conditions
         ## whereParams: @[{groupCat: "validLocation", groupOrder: 1, groupLinkOp: "AND", groupItems: @[]}]
         ## groupItems = @[{tableName: "testing", fieldName: "ab", fieldOp: ">=", groupOp: "AND(and)", order: 1, fieldType: "integer", filedValue: "10"},].
         ## 
-        whereParams*: seq[WhereParam]
+        whereParams*: seq[WhereParamType]
         # queryParams*: seq[QueryParam] => actionParams
         ## Read-only params =>
         ##  
-        subQueryParams*: SubQueryParam
+        subQueryParams*: SubQueryParamType
         ## Combined/joined query:
         ## 
-        joinQueryParams*: seq[JoinQueryParam]
-        unionQueryParams*: seq[UnionQueryParam]
+        joinQueryParams*: seq[JoinQueryParamType]
+        unionQueryParams*: seq[UnionQueryParamType]
         queryDistinct*: bool
         queryTop*: QueryTop
         ## Query function
@@ -428,10 +427,10 @@ type
         ## orderParams = @[{tableName: "testing", fieldName: "name", fieldOrder: "ASC", queryProc: "COUNT", functionOrderr: "DESC"}] 
         ## An order-param without orderType will default to ASC (ascending-order)
         ## 
-        orderParams*: seq[OrderParam]
-        groupParams*: seq[GroupParam] ## @[{fieldName: ""location", fieldOrder: 1}]
-        havingParams*: seq[HavingParam]
-        caseParams*: seq[CaseQueryParam] 
+        orderParams*: seq[OrderParamType]
+        groupParams*: seq[GroupParamType] ## @[{fieldName: ""location", fieldOrder: 1}]
+        havingParams*: seq[HavingParamType]
+        caseParams*: seq[CaseQueryParamType] 
         skip*: Natural
         limit*: Positive
         defaultLimit*: Positive
@@ -450,12 +449,12 @@ type
         logCreate*: bool
         logUpdate*: bool
         logDelete*: bool
-        userInfo*: UserParam
+        userInfo*: UserParamType
         checkAccess*: bool
         transLog*: LogParam
         isRecExist*: bool
         isAuthorized*: bool
         currentRecords*: seq[Row]
-        roleServices*: seq[RoleService]
+        roleServices*: seq[RoleServiceType]
         recExistMessage*: string
         unAuthMessage*: string

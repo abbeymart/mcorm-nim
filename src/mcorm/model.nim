@@ -19,9 +19,9 @@ import crud
 proc newModel(appDb: Database;
         modelName: string;
         tableName: string;
-        recordDesc: RecordDesc;
+        recordDesc: RecordDescType;
         timeStamp: bool;
-        relations: seq[Relation];
+        relations: seq[RelationType];
         defaults: seq[ProcedureTypes];
         validations: seq[ProcedureTypes];
         constraints: seq[ProcedureTypes];
@@ -43,13 +43,13 @@ proc newModel(appDb: Database;
 proc createTable(model: ModelType): ResponseMessage = 
     result = getResMessage("success", ResponseMessage())
 
-proc getRecords(crud: CrudParam): void = 
+proc getRecords(crud: CrudParamType): void = 
     echo "get all records"
 
-proc getRecord(crud: CrudParam): void = 
+proc getRecord(crud: CrudParamType): void = 
     echo "get all record"
 
-proc saveRecord(crud: CrudParam): void = 
+proc saveRecord(crud: CrudParamType): void = 
     echo "get all record"
 
 # Examples:

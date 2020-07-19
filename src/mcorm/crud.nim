@@ -20,22 +20,22 @@ export helper, ormtypes
 ## Default CRUD contructor returns the instance/object for CRUD task(s)
 proc newCrud*(appDb: Database; 
             tableName: string; 
-            userInfo: UserParam;
+            userInfo: UserParamType;
             actionParams: seq[QueryParam] = @[];
             queryParam: QueryParam = QueryParam();
-            whereParams: seq[WhereParam] = @[];
+            whereParams: seq[WhereParamType] = @[];
             docIds: seq[string] = @[];
-            inserIntoParams: seq[InsertIntoParam] = @[];
-            selectFromParams: seq[SelectFromParam] = @[];
-            selectIntoParams: seq[SelectIntoParam] = @[];
+            inserIntoParams: seq[InsertIntoParamType] = @[];
+            selectFromParams: seq[SelectFromParamType] = @[];
+            selectIntoParams: seq[SelectIntoParamType] = @[];
             queryFunctions: seq[ProcedureTypes] = @[];
-            orderParams: seq[OrderParam] = @[];
-            groupParams: seq[GroupParam]  = @[];
-            havingParams: seq[HavingParam] = @[];
-            caseParams: seq[CaseQueryParam]  = @[];
-            subQueryParams: seq[SubQueryParam] = @[];
-            joinQueryParams: seq[JoinQueryParam] = @[];
-            unionQueryParams: seq[UnionQueryParam] = @[];
+            orderParams: seq[OrderParamType] = @[];
+            groupParams: seq[GroupParamType]  = @[];
+            havingParams: seq[HavingParamType] = @[];
+            caseParams: seq[CaseQueryParamType]  = @[];
+            subQueryParams: seq[SubQueryParamType] = @[];
+            joinQueryParams: seq[JoinQueryParamType] = @[];
+            unionQueryParams: seq[UnionQueryParamType] = @[];
             queryDistinct: bool = false;
             queryTop: QueryTop = QueryTop();
             skip: Positive = 0;
@@ -55,7 +55,7 @@ proc newCrud*(appDb: Database;
             logDelete: bool = false;
             checkAccess: bool = true;
             transLog: LogParam = LogParam(auditDb: auditDb, auditColl: auditColl);
-            options: Table[string, DataTypes]): CrudParam =
+            options: Table[string, DataTypes]): CrudParamType =
     
     # new result
 
@@ -110,8 +110,8 @@ proc getRoleServices*(
                     userGroup: string;
                     serviceIds: seq[string];   # for any tasks (record, coll/table, function, package, solution...)
                     roleColl: string = "roles";
-                    ): seq[RoleService] =
-    var roleServices: seq[RoleService] = @[]
+                    ): seq[RoleServiceType] =
+    var roleServices: seq[RoleServiceType] = @[]
     try:
         #  concatenate serviceIds for query computation:
         let itemIds = serviceIds.join(", ")
@@ -124,7 +124,7 @@ proc getRoleServices*(
 
         if queryResult.len() > 0:           
             for row in queryResult:
-                roleServices.add(RoleService(
+                roleServices.add(RoleServiceType(
                     serviceId: row[0],
                     group: row[1],
                     category: row[2],   # coll/table, package_group, package, module, function etc.
@@ -140,7 +140,7 @@ proc getRoleServices*(
 ## checkAccess validate if current CRUD task is permitted based on defined/assiged roles
 proc checkAccess*(
                 accessDb: Database;
-                userInfo: UserParam;
+                userInfo: UserParamType;
                 tableName: string;
                 docIds: seq[string] = @[];    # for update, delete and read tasks 
                 accessColl: string = "accesskeys";
@@ -188,7 +188,7 @@ proc checkAccess*(
             serviceIds.add(collInfo[0])
 
         # Get role assignment (i.e. service items permitted for the user-group)
-        var roleServices: seq[RoleService] = @[]
+        var roleServices: seq[RoleServiceType] = @[]
         if serviceIds.len() > 0:
             roleServices = getRoleServices(accessDb = accessDb,
                                         serviceIds = serviceIds,
@@ -235,7 +235,7 @@ proc getCurrentRecord*(appDb: Database; tableName: string; queryParams: QueryPar
 ## taskPermission determines if the current CRUD task is permitted
 ## permission options: by owner, by record/role-assignment, by table/collection or by admin
 ## 
-proc taskPermission*(crud: CrudParam; taskType: string): ResponseMessage =
+proc taskPermission*(crud: CrudParamType; taskType: string): ResponseMessage =
     # taskType: "create", "update", "delete"/"remove", "read"
     # permit task(crud): by owner, role/group (on coll/table or doc/record(s)) or admin 
     try:
@@ -287,10 +287,10 @@ proc taskPermission*(crud: CrudParam; taskType: string): ResponseMessage =
                 return getResMessage("unAuthorized", ResponseMessage(value: nil, message: "You are not authorized to perform the requested action/task"))
 
             # filter the roleServices by categories ("collection | table" and "record or document") 
-            proc tableFunc(item: RoleService): bool = 
+            proc tableFunc(item: RoleServiceType): bool = 
                     (item.category.toLower() == "collection" or item.category.toLower() == "table")
 
-            proc recordFunc(item: RoleService): bool = 
+            proc recordFunc(item: RoleServiceType): bool = 
                     (item.category.toLower() == "record" or item.category.toLower() == "document")
                 
             let roleTables = roleServices.filter(tableFunc)
@@ -299,20 +299,20 @@ proc taskPermission*(crud: CrudParam; taskType: string): ResponseMessage =
             # taskType specific permission(s)
             case taskType:
             of "create", "insert":
-                proc collFunc(item: RoleService): bool = 
+                proc collFunc(item: RoleServiceType): bool = 
                     item.canCreate
                 # collection/table level access | only tableName Id was included in serviceIds
                 if roleTables.len > 0:
                     collPermitted = roleTables.allIt(collFunc(it))
 
             of "update":
-                proc collFunc(item: RoleService): bool = 
+                proc collFunc(item: RoleServiceType): bool = 
                     item.canUpdate
                 # collection/table level access
                 if roleTables.len > 0:
                     collPermitted = roleTables.allIt(collFunc(it))
                 # document/record level access: all docIds must have at least a match in the roleRecords
-                proc recRoleFunc(it1: string; it2: RoleService): bool = 
+                proc recRoleFunc(it1: string; it2: RoleServiceType): bool = 
                     (it2.service_id == it1 and it2.canUpdate)
 
                 proc recFunc(it1: string): bool =
@@ -321,13 +321,13 @@ proc taskPermission*(crud: CrudParam; taskType: string): ResponseMessage =
                 if crud.docIds.len > 0:
                     recordPermitted = crud.docIds.allIt(recFunc(it))
             of "delete", "remove":
-                proc collFunc(item: RoleService): bool = 
+                proc collFunc(item: RoleServiceType): bool = 
                     item.canDelete
                 # collection/table level access
                 if roleTables.len > 0:
                     collPermitted = roleTables.allIt(collFunc(it))
                 # document/record level access: all docIds must have at least a match in the roleRecords
-                proc recRoleFunc(it1: string; it2: RoleService): bool = 
+                proc recRoleFunc(it1: string; it2: RoleServiceType): bool = 
                     (it2.service_id == it1 and it2.canDelete)
 
                 proc recFunc(it1: string): bool =
@@ -337,13 +337,13 @@ proc taskPermission*(crud: CrudParam; taskType: string): ResponseMessage =
                     recordPermitted = crud.docIds.allIt(recFunc(it))
             of "read", "search":
                 echo "check-create"
-                proc collFunc(item: RoleService): bool = 
+                proc collFunc(item: RoleServiceType): bool = 
                     item.canRead
                 # collection/table level access
                 if roleTables.len > 0:
                     collPermitted = roleTables.allIt(collFunc(it))
                 # document/record level access: all docIds must have at least a match in the roleRecords
-                proc recRoleFunc(it1: string; it2: RoleService): bool = 
+                proc recRoleFunc(it1: string; it2: RoleServiceType): bool = 
                     (it2.service_id == it1 and it2.canRead)
 
                 proc recFunc(it1: string): bool =
