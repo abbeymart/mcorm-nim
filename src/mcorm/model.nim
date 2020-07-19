@@ -12,7 +12,45 @@
 ## 
 
 # types
-import ormtypes, times, tables
+import ormtypes, times, tables, mcresponse, mcdb
+import crud
+
+# Model constructor: 
+proc newModel(appDb: Database;
+        modelName: string;
+        tableName: string;
+        recordDesc: RecordDesc;
+        timeStamp: bool;
+        relations: seq[Relation];
+        defaults: seq[ProcedureTypes];
+        validations: seq[ProcedureTypes];
+        constraints: seq[ProcedureTypes];
+        methods: seq[ProcedureTypes]): ModelType =
+    result.appDb = appDb
+    result.modelName = modelName
+    result.tableName = tableName
+    result.recordDesc = recordDesc
+    result.timeStamp = timeStamp
+    result.relations = relations
+    result.defaults = defaults
+    result.validations = validations
+    result.constraints = constraints
+    result.methods = methods
+
+# CRUD constructor : imported
+
+# Model methods
+proc createTable(model: ModelType): ResponseMessage = 
+    result = getResMessage("success", ResponseMessage())
+
+proc getRecords(crud: CrudParam): void = 
+    echo "get all records"
+
+proc getRecord(crud: CrudParam): void = 
+    echo "get all record"
+
+proc saveRecord(crud: CrudParam): void = 
+    echo "get all record"
 
 # Examples:
 
@@ -42,19 +80,45 @@ type
     #     userRecord*: UserRecord
     #     userModel*: Model
 
+
+proc defaults(rec: ModelType): seq[ProcedureTypes] =
+    result = @[]
+
+proc methods(rec: ModelType): seq[ProcedureTypes] =
+    result = @[]
+
+proc constraints(rec: ModelType): seq[ProcedureTypes] =
+    result = @[]
+     
+proc validations(rec: ModelType): seq[ProcedureTypes] =
+    result = @[]
+
+proc fullName(rec: UserRecord): string =
+    let userRec = rec
+    result = if userRec.middleName != "":
+                userRec.firstName & " " & userRec.middleName & " " & userRec.lastName
+            else:
+                 userRec.firstName & " " & userRec.lastName
+
 proc getCurrentDateTime(): DateTime =
     result = now().utc
 
-proc User(): Model =
-    result.modelName = "User"
-    result.tableName = "users"
-    result.timeStamp = true
-    
-    # table structure / model definitions
-    result.recordDesc = initTable[string, FieldDesc]()
 
+proc UserModel(): ModelType =
+    echo "test model"
+    var appDb = Database()     # TBD
+    var userModel = ModelType()
+
+    let 
+        modelName = "Users"
+        tableName = "users"
+        timeStamp = true
+    
+    # Table structure / model definitions
+    var recordDesc = initTable[string, FieldDesc]()
+    
     # Model recordDesc definition
-    result.recordDesc["id"] = FieldDesc(
+    recordDesc["id"] = FieldDesc(
         fieldType: DataTypes.UUID,
         fieldLength: 255,
         fieldPattern: "![0-9]", # exclude digit 0 to 9 | "![_, -, \, /, *, |, ]" => exclude the charaters
@@ -68,7 +132,7 @@ proc User(): Model =
         # fieldMaxValue*: float
     )
 
-    result.recordDesc["firstName"] = FieldDesc(
+    recordDesc["firstName"] = FieldDesc(
         fieldType: DataTypes.STRING,
         fieldLength: 255,
         fieldPattern: "[a-zA-Z]",
@@ -76,41 +140,38 @@ proc User(): Model =
         notNull: true,
     )
 
+    userModel = ModelType(
+        modelName: modelName,
+        tableName: tableName,
+        recordDesc: recordDesc,
+        timeStamp: timeStamp,
+        relations: @[],
+        defaults: @[],
+        validations: @[],
+        constraints: @[],
+        methods: @[],
+        appDb: appDb,
+    )
+
     # model methods/procs | initialize and/or define
-    # result.defaults = defaults(result)
-    # result.validations = validations(result)
-    # result.constraints = constraints(result)
-    # result.methods = methods(result)
+    let 
+        defaults = defaults(userModel)
+        validations = validations(userModel)
+        constraints = constraints(userModel)
+        methods = methods(userModel)
 
-echo "user-model: " & User().repr
+    # extend / instantiate model
+    result = newModel(
+        modelName = modelName,
+        tableName = tableName,
+        recordDesc = recordDesc,
+        timeStamp = timeStamp,
+        relations = @[],
+        defaults = defaults,
+        validations = validations,
+        constraints = constraints,
+        methods = methods,
+        appDb = appDb,
+    )
 
-
-proc defaults(rec: Model): seq[ProcedureTypes] =
-    result = @[]
-
-proc methods(rec: Model): seq[ProcedureTypes] =
-    result = @[]
-
-proc constraints(rec: Model): seq[ProcedureTypes] =
-    result = @[]
-     
-proc validations(rec: Model): seq[ProcedureTypes] =
-    result = @[]
-
-proc fullName(rec: UserRecord): string =
-    let userRec = rec
-    result = if userRec.middleName != "":
-                userRec.firstName & " " & userRec.middleName & " " & userRec.lastName
-            else:
-                 userRec.firstName & " " & userRec.lastName
-
-
-
-let rec = User()
-
-let 
-    defValues = defaults(rec)
-    met = methods(rec)
-    constr = constraints(rec)
-    validate = validations(rec)
-
+echo "user-model: " & UserModel().repr

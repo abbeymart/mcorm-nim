@@ -11,15 +11,15 @@
 import strutils, times, sequtils
 import db_postgres, json, tables
 import mcdb, mccache, mcresponse, mctranslog
-import helper, crudtypes
+import helper, ormtypes
 
 export db_postgres, json, tables
 export mcdb, mccache, mcresponse, mctranslog
-export helper, crudtypes
+export helper, ormtypes
 
 ## Default CRUD contructor returns the instance/object for CRUD task(s)
 proc newCrud*(appDb: Database; 
-            collName: string; 
+            tableName: string; 
             userInfo: UserParam;
             actionParams: seq[QueryParam] = @[];
             queryParam: QueryParam = QueryParam();
@@ -28,7 +28,7 @@ proc newCrud*(appDb: Database;
             inserIntoParams: seq[InsertIntoParam] = @[];
             selectFromParams: seq[SelectFromParam] = @[];
             selectIntoParams: seq[SelectIntoParam] = @[];
-            queryFunctions: seq[QueryFunction] = @[];
+            queryFunctions: seq[ProcedureTypes] = @[];
             orderParams: seq[OrderParam] = @[];
             groupParams: seq[GroupParam]  = @[];
             havingParams: seq[HavingParam] = @[];
@@ -55,12 +55,12 @@ proc newCrud*(appDb: Database;
             logDelete: bool = false;
             checkAccess: bool = true;
             transLog: LogParam = LogParam(auditDb: auditDb, auditColl: auditColl);
-            options: Table[string, ValueType] = []): CrudParam =
+            options: Table[string, DataTypes]): CrudParam =
     
-    new result
+    # new result
 
     result.appDb = appDb
-    result.collName = collName
+    result.tableName = tableName
     result.userInfo = userInfo
     result.actionParams = actionParams
     result.queryParam = queryParam
@@ -141,7 +141,7 @@ proc getRoleServices*(
 proc checkAccess*(
                 accessDb: Database;
                 userInfo: UserParam;
-                collName: string;
+                tableName: string;
                 docIds: seq[string] = @[];    # for update, delete and read tasks 
                 accessColl: string = "accesskeys";
                 userColl: string = "users";
@@ -174,9 +174,9 @@ proc checkAccess*(
             return getResMessage("unAuthorized", ResponseMessage(value: nil, message: "Unauthorized: user information not found or inactive") )
 
         # if all the above checks passed, check for role-services access by taskType
-        # obtain collName - collId (id) from serviceColl/Table (holds all accessible resources)
+        # obtain tableName - collId (id) from serviceColl/Table (holds all accessible resources)
         var collInfoQuery = sql("SELECT id from " & serviceColl &
-                                " WHERE name = " & collName )
+                                " WHERE name = " & tableName )
 
         let collInfo = accessDb.db.getRow(collInfoQuery)
         var collId = ""
@@ -212,10 +212,10 @@ proc checkAccess*(
         return getResMessage("notFound", ResponseMessage(value: nil, message: getCurrentExceptionMsg()))
 
 ## getCurrentRecord returns the current records for the CRUD task
-proc getCurrentRecord*(appDb: Database; collName: string; queryParams: QueryParam; whereParams: seq[WhereParam]): ResponseMessage =
+proc getCurrentRecord*(appDb: Database; tableName: string; queryParams: QueryParam; whereParams: seq[WhereParam]): ResponseMessage =
     try:
         # compose query statement based on the whereParams
-        var selectQuery = computeSelectQuery(collName, queryParams)
+        var selectQuery = computeSelectQuery(tableName, queryParams)
         var whereQuery = computeWhereQuery(whereParams)
 
         var reqQuery = sql(selectQuery & " " & whereQuery)
@@ -243,7 +243,7 @@ proc taskPermission*(crud: CrudParam; taskType: string): ResponseMessage =
         var taskPermitted, ownerPermitted, recordPermitted, collPermitted, isAdmin: bool = false
 
         # check role-based access
-        var accessRes = checkAccess(accessDb = crud.accessDb, collName = crud.collName,
+        var accessRes = checkAccess(accessDb = crud.accessDb, tableName = crud.tableName,
                                     docIds = crud.docIds, userInfo = crud.userInfo )
 
         if accessRes.code == "success":
@@ -254,7 +254,7 @@ proc taskPermission*(crud: CrudParam; taskType: string): ResponseMessage =
             let accessUserId = accessInfo.userId
             if crud.docIds.len() > 0 and accessUserId != "":
                 var selectQuery = "SELECT id, createdby, updatedby, createdat, updatedat FROM "
-                selectQuery.add(crud.collName)
+                selectQuery.add(crud.tableName)
                 selectQuery.add(" ")
                 var whereQuery= " WHERE id IN ("
                 whereQuery.add(crud.docIds.join(", "))
@@ -301,7 +301,7 @@ proc taskPermission*(crud: CrudParam; taskType: string): ResponseMessage =
             of "create", "insert":
                 proc collFunc(item: RoleService): bool = 
                     item.canCreate
-                # collection/table level access | only collName Id was included in serviceIds
+                # collection/table level access | only tableName Id was included in serviceIds
                 if roleTables.len > 0:
                     collPermitted = roleTables.allIt(collFunc(it))
 

@@ -119,6 +119,18 @@ type
         targetTable*: string
         targetFields*: seq[FieldDesc]
 
+    ModelType* = ref object
+        modelName*: string
+        tableName*: string
+        recordDesc*: RecordDesc
+        timeStamp*: bool
+        relations*: seq[Relation]
+        defaults*: seq[ProcedureTypes]
+        validations*: seq[ProcedureTypes]
+        constraints*: seq[ProcedureTypes]
+        methods*: seq[ProcedureTypes]
+        appDb*: Database
+
     Model* = ref object
         modelName*: string
         tableName*: string
@@ -130,6 +142,7 @@ type
         validations*: seq[ProcedureTypes]
         constraints*: seq[ProcedureTypes]
         methods*: seq[ProcedureTypes]
+        appDb: Database
 
     ## User/client information to be provided after successful login
     ## 
@@ -164,22 +177,85 @@ type
         show*: bool     ## includes or excludes from the SELECT query fields
         fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
 
+    SaveFieldType* = object
+        fieldName*: string
+        fieldValue*: string
+        fieldOrder*: Positive
+        fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
+
+    CreateFieldType* = object
+        fieldName*: string
+        fieldValue*: string 
+
+    UpdateFieldType* = object
+        fieldName*: string
+        fieldValue*: string
+        fieldOrder*: Positive
+        fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
+
+    ReadFieldType* = object
+        fieldName*: string
+        fieldOrder*: Positive
+        fieldAlias*: string
+        show*: bool     ## includes or excludes from the SELECT query fields
+        fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
+
+    DeleteFieldType* = object
+        fieldName*: string
+        fieldSubQuery*: QueryParam
+        fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
+
+    WhereFieldType* = object
+        fieldName*: string
+        fieldOrder*: Positive
+        fieldOp*: Op    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
+        fieldValue*: string  ## for insert/update | start value for range/BETWEEN/NOTBETWEEN and pattern for LIKE operators
+        fieldValueEnd*: string   ## end value for range/BETWEEN/NOTBETWEEN operator
+        fieldValues*: seq[string] ## values for IN/NOTIN operator
+        fieldSubQuery*: QueryParam ## for WHERE IN (SELECT field from fieldTable)
+        fieldPostOp*: Op ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
+        groupOp*: Op     ## e.g. AND | OR...
+        fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
+
     WhereParam* = object
         groupCat*: string       # group (items) categorization
         groupLinkOp*: Op        # group relationship to the next group (AND, OR)
         groupOrder*: Positive        # group order, the last group groupLinkOp should be "" or will be ignored
-        groupItems*: seq[FieldItem] # group items to be composed by category
+        groupItems*: seq[WhereFieldType] # group items to be composed by category
 
+    SaveParam* = object
+        tableName*: string
+        fields*: seq[SaveFieldType]
+    
+    CreateParam* = object
+        tableName*: string
+        fields*: seq[CreateFieldType]
+    
+    UpdateParam* = object
+        tableName*: string
+        fields*: seq[UpdateFieldType]
+        where*: seq[WhereFieldType]
+    
+    ReadParam* = object
+        tableName*: string
+        fields*: seq[ReadFieldType]
+        where*: seq[WhereFieldType]
+    
+    DeleteParam* = object
+        tableName*: string
+        fields*: seq[DeleteFieldType]
+        where*: seq[WhereFieldType]
+        
     ## queryProc type for function with one or more fields / arguments
     ## functionType => MIN(min), MAX, SUM, AVE, COUNT, CUSTOM/USER defined
     ## fieldItems=> specify fields/parameters to match the arguments for the functionType.
     ## The field item type must match the argument types expected by the functionType, 
     ## otherwise the only the first function-matching field will be used, as applicable
-    queryProc* = object
+    QueryProc* = object
         functionType*: ProcedureTypes
         fieldItems*: seq[FieldItem]
         
-    QueryParam* = object
+    QueryParam* = object        # TODO: Generic => make specific to CRUD operations
         tableName*: string    ## default: "" => will use instance tableName instead
         fieldItems*: seq[FieldItem]   ## @[] => SELECT * (all fields)
         whereParams*: seq[WhereParam] ## whereParams or docId(s)  will be required for delete task
@@ -348,7 +424,7 @@ type
         queryDistinct*: bool
         queryTop*: QueryTop
         ## Query function
-        queryFunctions*: seq[queryProc]
+        queryFunctions*: seq[ProcedureTypes]
         ## orderParams = @[{tableName: "testing", fieldName: "name", fieldOrder: "ASC", queryProc: "COUNT", functionOrderr: "DESC"}] 
         ## An order-param without orderType will default to ASC (ascending-order)
         ## 
