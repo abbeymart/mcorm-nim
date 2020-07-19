@@ -49,10 +49,13 @@ proc strToTime*(val: string): Time =
         # return the current time
         return Time()
 
+
+## computeCreateTableScript
+
 ## computeSelectByIdScript compose select SQL script by id(s) 
 ## 
-proc computeSelectByIdScript*(collName: string; docIds:seq[string]; fields: seq[string] = @[] ): string =
-    if docIds.len < 1 or collName == "":
+proc computeSelectByIdScript*(tableName: string; docIds:seq[string]; fields: seq[string] = @[] ): string =
+    if docIds.len < 1 or tableName == "":
         raise newException(SelectQueryError, "table/collection name and record id(s) are required for the select/read operation")
     try:   
         var selectQuery = ""
@@ -69,7 +72,7 @@ proc computeSelectByIdScript*(collName: string; docIds:seq[string]; fields: seq[
                 if fieldLen > 1 and fieldCount < fieldLen:
                     selectQuery.add(", ")
             selectQuery.add(" FROM ")
-            selectQuery.add(collName)
+            selectQuery.add(tableName)
             selectQuery.add(" WHERE id IN (")
             var idCount =  0
             for id in docIds:
@@ -82,7 +85,7 @@ proc computeSelectByIdScript*(collName: string; docIds:seq[string]; fields: seq[
             selectQuery.add(" )")
         else:
             selectQuery = "SELECT * FROM "
-            selectQuery.add(collName)
+            selectQuery.add(tableName)
             selectQuery.add(" WHERE id IN (")
             var idCount =  0
             for id in docIds:
@@ -101,17 +104,17 @@ proc computeSelectByIdScript*(collName: string; docIds:seq[string]; fields: seq[
 
 ## computeSelectQuery compose SELECT query from the queryParam
 ## queryType => simple, join, cases, subquery, combined etc.
-proc computeSelectQuery*(collName: string;
+proc computeSelectQuery*(tableName: string;
                         queryParam: QueryParamType = QueryParamType();
                         queryType: string = "simple";
                         fields: seq[string] = @[]): string =
-    if collName == "":
+    if tableName == "":
         raise newException(SelectQueryError, "Table/collection name is required for the select/read operation")                    
     
     try:
         # script, sorting, valid group item count variables
         var selectQuery = ""
-        var sortedFields: seq[FieldDescType] = @[]
+        var sortedFields: seq[FieldItemType] = @[]
         var fieldLen = 0                  # number of fields in the SELECT statement/query         
         var unspecifiedGroupItemCount = 0 # variable to determine unspecified fieldName(s) to check if query/script should be returned
 
@@ -134,7 +137,7 @@ proc computeSelectQuery*(collName: string;
 
             # add remaining query/script information 
             selectQuery.add(" FROM ")
-            selectQuery.add(collName)
+            selectQuery.add(tableName)
             selectQuery.add(" ")
             return selectQuery
         elif queryParam.fields.len() == 1:
@@ -170,9 +173,9 @@ proc computeSelectQuery*(collName: string;
                     inc unspecifiedGroupItemCount
                     continue
                 inc fieldCount      # count valid field  
-                if fieldItem.fieldColl != "":
+                if fieldItem.fieldTable != "":
                     selectQuery.add(" ")
-                    selectQuery.add(fieldItem.fieldColl)
+                    selectQuery.add(fieldItem.fieldTable)
                     selectQuery.add(".")
                     selectQuery.add(fieldItem.fieldName)
                     if fieldLen > 1 and fieldCount < (fieldLen - unspecifiedGroupItemCount):
@@ -199,7 +202,7 @@ proc computeSelectQuery*(collName: string;
         
         # add table/collection to select from
         selectQuery.add(" FROM ")
-        selectQuery.add(collName)
+        selectQuery.add(tableName)
         selectQuery.add(" ")
 
         return selectQuery
@@ -257,8 +260,8 @@ proc computeWhereQuery*(where: seq[WhereParamType]): string =
                     continue
                 inc groupItemCount      # count valid groupItem
                 var fieldname = groupItem.fieldName
-                if groupItem.fieldColl != "":
-                    fieldname = groupItem.fieldColl & "." & groupItem.fieldName
+                if groupItem.fieldTable != "":
+                    fieldname = groupItem.fieldTable & "." & groupItem.fieldName
 
                 case groupItem.fieldOp.toLower():
                 of "eq", "=":
@@ -372,7 +375,7 @@ proc computeWhereQuery*(where: seq[WhereParamType]): string =
                         var inValues = "("
                         # include values from SELECT query (e.g. lookup table/collection)
                         let fieldSubQuery = groupItem.fieldSubQuery
-                        let fieldSelectQuery = computeSelectQuery(fieldSubQuery.collName, fieldSubQuery)
+                        let fieldSelectQuery = computeSelectQuery(fieldSubQuery.tableName, fieldSubQuery)
                         let fieldWhereQuery = computeWhereQuery(fieldSubQuery.where)
                         inValues = fieldSelectQuery & " " & fieldWhereQuery & " )"
                         
@@ -443,12 +446,12 @@ proc computeWhereQuery*(where: seq[WhereParamType]): string =
 
 ## createScript compose insert SQL script
 ## 
-proc computeCreateScript*(collName: string, actionParams: seq[QueryParamType]): seq[string] = 
-    if collName == "" or actionParams.len < 1 :
+proc computeCreateScript*(tableName: string, actionParams: seq[QueryParamType]): seq[string] = 
+    if tableName == "" or actionParams.len < 1 :
         raise newException(CreateQueryError, "Table/collection name and action-params are required for the create operation")
     
-    # lower-case the collName
-    # var colName = collName.toLower()
+    # lower-case the tableName
+    # var colName = tableName.toLower()
 
     # computed create script from queryParams    
     try:
@@ -456,7 +459,7 @@ proc computeCreateScript*(collName: string, actionParams: seq[QueryParamType]): 
         var invalidCreateItemCount = 0
         var createItemCount = 0         # valid create item count
         for item in actionParams:
-            var itemScript = "INSERT INTO " & collName & " ("
+            var itemScript = "INSERT INTO " & tableName & " ("
             var itemValues = " VALUES("
             var 
                 fieldCount = 0      # valid field count
@@ -507,8 +510,8 @@ proc computeCreateScript*(collName: string, actionParams: seq[QueryParamType]): 
 
 ## updateScript compose update SQL script
 ## 
-proc computeUpdateScript*(collName: string, actionParams: seq[QueryParamType], docIds: seq[string]): seq[string] =
-    if docIds.len < 1 or collName == "" or actionParams.len < 1 :
+proc computeUpdateScript*(tableName: string, actionParams: seq[QueryParamType], docIds: seq[string]): seq[string] =
+    if docIds.len < 1 or tableName == "" or actionParams.len < 1 :
         raise newException(UpdateQueryError, "Table/collection name, doc-ids and action-params are required for the update operation")
     
     # compute update script from queryParams  
@@ -518,7 +521,7 @@ proc computeUpdateScript*(collName: string, actionParams: seq[QueryParamType], d
         var updateItemCount = 0         # valid update item count
         for item in actionParams:
             var 
-                itemScript = "UPDATE " & collName & " SET"
+                itemScript = "UPDATE " & tableName & " SET"
                 fieldCount = 0
                 missingField = 0
             let fieldLen = item.fields.len
@@ -562,13 +565,13 @@ proc computeUpdateScript*(collName: string, actionParams: seq[QueryParamType], d
 
 ## deleteByIdScript compose delete SQL script by id(s) 
 ## 
-proc computeDeleteByIdScript*(collName: string, docIds:seq[string]): string =
-    if docIds.len < 1 or collName == "":
+proc computeDeleteByIdScript*(tableName: string, docIds:seq[string]): string =
+    if docIds.len < 1 or tableName == "":
         raise newException(DeleteQueryError, "Table/collection name and record id(s) are required for the delete operation")
     try:
         var deleteScripts = ""
         let docIdsLen = docIds.len
-        deleteScripts = "DELETE FROM " & collName & " WHERE id IN("
+        deleteScripts = "DELETE FROM " & tableName & " WHERE id IN("
         var idCount = 0
         for id in docIds:
             inc idCount
@@ -584,13 +587,13 @@ proc computeDeleteByIdScript*(collName: string, docIds:seq[string]): string =
 
 ## deleteByParamScript compose delete SQL script by params
 ## 
-proc computeDeleteByParamScript*(collName: string, where: seq[WhereParamType]): string =
-    if where.len < 1 or collName == "":
+proc computeDeleteByParamScript*(tableName: string, where: seq[WhereParamType]): string =
+    if where.len < 1 or tableName == "":
         raise newException(DeleteQueryError, "Table/collection name and where-params are required for the delete operation")
     try:
         var deleteScripts = ""
         let whereParam = computeWhereQuery(where)
-        deleteScripts = "DELETE FROM " & collName & " " & whereParam
+        deleteScripts = "DELETE FROM " & tableName & " " & whereParam
         return deleteScripts
     except:
         raise newException(DeleteQueryError, getCurrentExceptionMsg())

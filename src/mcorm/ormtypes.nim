@@ -207,6 +207,7 @@ type
         fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX, custom... for select/read-query...
 
     WhereFieldType* = object
+        fieldTable*: string
         fieldName*: string
         fieldOrder*: Positive
         fieldOp*: OpTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
@@ -253,13 +254,13 @@ type
     ## fields=> specify fields/parameters to match the arguments for the functionType.
     ## The field item type must match the argument types expected by the functionType, 
     ## otherwise the only the first function-matching field will be used, as applicable
-    QueryProc* = object
-        functionType*: ProcedureTypes
-        fields*: seq[FieldItemType]
+    # QueryProc* = object
+    #     functionType*: ProcedureTypes
+    #     fields*: seq[FieldItemType]
         
     QueryParamType* = object        # TODO: Generic => make specific to CRUD operations
         tableName*: string    ## default: "" => will use instance tableName instead
-        fields*: seq[FieldDescType]   ## @[] => SELECT * (all fields)
+        fields*: seq[FieldItemType]   ## @[] => SELECT * (all fields)
         where*: seq[WhereParamType] ## whereParams or docId(s)  will be required for delete task
 
     ## For SELECT TOP... query
@@ -269,7 +270,7 @@ type
     
     ## SELECT CASE... query condition(s)
     CaseConditionType* = object
-        fields*: seq[FieldDescType]
+        fields*: seq[FieldItemType]
         resultMessage*: string
         resultField*: string  ## for ORDER BY options
 
@@ -320,22 +321,22 @@ type
     ## combined/joined query (read) param-type
     JoinSelectFieldType* =  object
         tableName*: string
-        collFields*: seq[FieldItemType]
+        tableFields*: seq[FieldItemType]
     
     JoinFieldType* = object
         tableName*: string
         joinField*: string
 
     JoinQueryType* = object
-        selectFromColl*: string ## default to tableName
+        selectFromTable*: string ## default to tableName
         selectFields*: seq[JoinSelectFieldType]
         joinType*: string ## INNER (JOIN), OUTER (LEFT, RIGHT & FULL), SELF...
         joinFields*: seq[JoinFieldType] ## [{tableName: "abc", joinField: "field1" },]
     
     SelectIntoType* = object
         selectFields*: seq[FieldItemType] ## @[] => SELECT *
-        intoColl*: string          ## new table/collection
-        fromColl*: string          ## old/external table/collection
+        intoTable*: string          ## new table/collection
+        fromTable*: string          ## old/external table/collection
         fromFilename*: string      ## IN external DB file, e.g. backup.mdb
         WhereParamType*: seq[WhereParamType]
         joinParam*: JoinQueryType ## for copying from more than one table/collection
