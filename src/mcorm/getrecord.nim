@@ -15,17 +15,17 @@ import crud, sequtils
 # constructor
 ## get-record operations constructor
 proc newGetRecord*(appDb: Database;
-                    collName: string;
-                    userInfo: UserParam;
+                    tableName: string;
+                    userInfo: UserParamType;
                     checkAccess: bool = true;
-                    whereParams: seq[WhereParam] = @[];
+                    where: seq[WhereParamType] = @[];
                     docIds: seq[string] = @[];
                     fields: seq[string] = @[]; 
-                    options: Table[string, ValueType] = []): CrudParam =
+                    options: Table[string, DataTypes]): CrudParamType =
     ## base / shared constructor
-    result = newCrud(appDb, collName, userInfo, whereParams = whereParams, docIds = docIds, options = options )
+    result = newCrud(appDb, tableName, userInfo, where = where, docIds = docIds, options = options )
   
-proc getAllRecords*(crud: CrudParam; fields: seq[string] = @[]): ResponseMessage =  
+proc getAllRecords*(crud: CrudParamType; fields: seq[string] = @[]): ResponseMessage =  
     try:
         # ensure that checkAccess is false, otherwise send unauthorized response
         if crud.checkAccess:
@@ -39,13 +39,13 @@ proc getAllRecords*(crud: CrudParam; fields: seq[string] = @[]): ResponseMessage
         if crud.skip < 0:
             crud.skip = 0
         
-        var getRecScript = computeSelectQuery(crud.collName, fields = fields)
+        var getRecScript = computeSelectQuery(crud.tableName, fields = fields)
         getRecScript.add(" SKIP ")
         getRecScript.add($crud.skip)
         getRecScript.add(" LIMIT ")
         getRecScript.add($crud.limit)
 
-        # perform query for the collName and deliver seq[Row] result to the client/consumer of the CRUD service, as json array  
+        # perform query for the tableName and deliver seq[Row] result to the client/consumer of the CRUD service, as json array  
         # TODO: transform getRecs into JSON based on projected fiedls or data model structure
         let getRecs =  crud.appDb.db.getAllRows(sql(getRecScript))
 
@@ -54,22 +54,22 @@ proc getAllRecords*(crud: CrudParam; fields: seq[string] = @[]): ResponseMessage
         const okRes = OkayResponse(ok: false)
         return getResMessage("saveError", ResponseMessage(value: %*(okRes), message: getCurrentExceptionMsg()))
 
-proc getRecord*(crud: CrudParam; by: string;
+proc getRecord*(crud: CrudParamType; by: string;
                 docIds: seq[string] = @[];
-                whereParams: seq[WhereParam] = @[];
+                where: seq[WhereParamType] = @[];
                 fields: seq[string] = @[]): ResponseMessage =  
     try:
         # update crud instance ref-variables
         if crud.docIds.len < 1 and docIds.len > 0:
             crud.docIds = docIds
-        if crud.whereParams.len < 1 and whereParams.len > 0:
-            crud.whereParams = whereParams
+        if crud.where.len < 1 and where.len > 0:
+            crud.where = where
 
         # validate required inputs by action-type
         if by == "id" and crud.docIds.len < 1:
             # return error message
             return getResMessage("paramsError", ResponseMessage(value: nil, message: "Delete condition by id (docIds[]) is required"))
-        elif (by == "params" or by == "query") and whereParams.len < 1:
+        elif (by == "params" or by == "query") and where.len < 1:
             return getResMessage("paramsError", ResponseMessage(value: nil, message: "Delete condition by params (whereParams) is required"))
         
         # check query params, skip and limit(records to return maximum 100,000 or as set by service consumer)
@@ -93,14 +93,14 @@ proc getRecord*(crud: CrudParam; by: string;
 
             if taskValue and taskPermit.code == "success":
                 ## get current records
-                var getRecScript = computeSelectByIdScript(crud.collName, crud.docIds, fields = fields)
+                var getRecScript = computeSelectByIdScript(crud.tableName, crud.docIds, fields = fields)
                 # append skip and limit params
                 getRecScript.add(" SKIP ")
                 getRecScript.add($crud.skip)
                 getRecScript.add(" LIMIT ")
                 getRecScript.add($crud.limit)
 
-                # perform query for the collName and deliver seq[Row] result to the client/consumer of the CRUD service, as json array
+                # perform query for the tableName and deliver seq[Row] result to the client/consumer of the CRUD service, as json array
                 # TODO: transform currentRecs into JSON based on projected fiedls or data model structure
                 let getRecs =  crud.appDb.db.getAllRows(sql(getRecScript))
                 
@@ -114,7 +114,7 @@ proc getRecord*(crud: CrudParam; by: string;
             let taskValue = taskPermit.value{"ok"}.getBool(false)
 
             if taskValue and taskPermit.code == "success":
-                let selectQuery = computeSelectQuery(crud.collName, crud.queryParam)
+                let selectQuery = computeSelectQuery(crud.tableName, crud.queryParam)
                 let whereParam = computeWhereQuery(crud.whereParams)
 
                 var getRecScript = selectQuery & " " & whereParam
@@ -125,7 +125,7 @@ proc getRecord*(crud: CrudParam; by: string;
                 getRecScript.add($crud.limit)
 
                 let getRecs =  crud.appDb.db.getAllRows(sql(getRecScript))
-                # perform query for the collName and deliver seq[Row] result to the client/consumer of the CRUD service, as json array
+                # perform query for the tableName and deliver seq[Row] result to the client/consumer of the CRUD service, as json array
                 # TODO: transform currentRecs into JSON based on projected fiedls or data model structure
                 return getResMessage("success", ResponseMessage(value: %*(getRecs)))
             else:
@@ -136,8 +136,8 @@ proc getRecord*(crud: CrudParam; by: string;
             
             # compose docIds for getRecords by params
             if by == "params" or by == "query":
-                let selectQuery = "SELECT id FROM " & crud.collName
-                let whereParam = computeWhereQuery(crud.whereParams)
+                let selectQuery = "SELECT id FROM " & crud.tableName
+                let whereParam = computeWhereQuery(crud.where)
 
                 var getRecScript = selectQuery & " " & whereParam
                 # append skip and limit params
@@ -153,7 +153,7 @@ proc getRecord*(crud: CrudParam; by: string;
                     crud.docIds.add(rec[0])
 
             # check role-based access
-            var accessRes = checkAccess(accessDb = crud.accessDb, collName = crud.collName,
+            var accessRes = checkAccess(accessDb = crud.accessDb, tableName = crud.tableName,
                                     docIds = crud.docIds, userInfo = crud.userInfo )
             
             var isAdmin: bool = false
@@ -170,7 +170,7 @@ proc getRecord*(crud: CrudParam; by: string;
                     it.serviceId == collId
                 collAccessPermitted = accessInfo.roleServices.anyIt(collAccess(it, accessInfo.collId))
     
-            # if current user is admin or read-access permitted on collName, get all records
+            # if current user is admin or read-access permitted on tableName, get all records
             if isAdmin or collAccessPermitted:
                 return crud.getAllRecords(fields = fields)
             
@@ -198,7 +198,7 @@ proc getRecord*(crud: CrudParam; by: string;
                 getRecScript.add($crud.limit) 
             else:
                 # SELECT all fields in the table / collection
-                getRecScript = "SELECT * FROM " & crud.collName & " "
+                getRecScript = "SELECT * FROM " & crud.tableName & " "
                 getRecScript.add("WHERE createdby = ")
                 getRecScript.add(userId)
                 getRecScript.add(" ")
@@ -209,7 +209,7 @@ proc getRecord*(crud: CrudParam; by: string;
 
             let getRecs =  crud.appDb.db.getAllRows(sql(getRecScript))
 
-            # perform query for the collName and deliver seq[Row] result to the client/consumer of the CRUD service, as json array
+            # perform query for the tableName and deliver seq[Row] result to the client/consumer of the CRUD service, as json array
             # TODO: transform currentRecs into JSON based on projected fiedls or data model structure
             return getResMessage("success", ResponseMessage(value: %*(getRecs)))
     except:

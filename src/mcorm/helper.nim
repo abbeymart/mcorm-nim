@@ -26,7 +26,7 @@
 
 import strutils, times, algorithm
 
-import crudtypes
+import ormtypes
 
 ## strToBool procedure converts a string parameter to a boolean
 proc strToBool*(val: string): bool =
@@ -102,7 +102,7 @@ proc computeSelectByIdScript*(collName: string; docIds:seq[string]; fields: seq[
 ## computeSelectQuery compose SELECT query from the queryParam
 ## queryType => simple, join, cases, subquery, combined etc.
 proc computeSelectQuery*(collName: string;
-                        queryParam: QueryParam = QueryParam();
+                        queryParam: QueryParamType = QueryParamType();
                         queryType: string = "simple";
                         fields: seq[string] = @[]): string =
     if collName == "":
@@ -111,11 +111,11 @@ proc computeSelectQuery*(collName: string;
     try:
         # script, sorting, valid group item count variables
         var selectQuery = ""
-        var sortedFields: seq[FieldItem] = @[]
+        var sortedFields: seq[FieldDescType] = @[]
         var fieldLen = 0                  # number of fields in the SELECT statement/query         
         var unspecifiedGroupItemCount = 0 # variable to determine unspecified fieldName(s) to check if query/script should be returned
 
-        if queryParam == QueryParam() or queryParam.fieldItems.len() < 1:
+        if queryParam == QueryParamType() or queryParam.fields.len() < 1:
             if fields.len > 0:
                 var fieldCount = 0
                 fieldLen = fields.len
@@ -137,12 +137,12 @@ proc computeSelectQuery*(collName: string;
             selectQuery.add(collName)
             selectQuery.add(" ")
             return selectQuery
-        elif queryParam.fieldItems.len() == 1:
-            sortedFields = queryParam.fieldItems    # no sorting required for one field
+        elif queryParam.fields.len() == 1:
+            sortedFields = queryParam.fields    # no sorting required for one field
             fieldLen = 1
         else:
             # sort queryParam.fieldItems by fieldOrder (ASC)
-            sortedFields  = queryParam.fieldItems.sortedByIt(it.fieldOrder)
+            sortedFields  = queryParam.fields.sortedByIt(it.fieldOrder)
             fieldLen = sortedFields.len()
 
         # iterate through sortedFields and compose select-query/script, by queryType
@@ -208,31 +208,31 @@ proc computeSelectQuery*(collName: string;
         # raise exception or return empty select statement, for exception/error
         raise newException(SelectQueryError, getCurrentExceptionMsg())
 
-## computeWhereQuery compose WHERE query from the whereParams
+## computeWhereQuery compose WHERE query from the where
 ## 
-proc computeWhereQuery*(whereParams: seq[WhereParam]): string =
-    if whereParams.len < 1 :
+proc computeWhereQuery*(where: seq[WhereParamType]): string =
+    if where.len < 1 :
                 raise newException(WhereQueryError, "Where-params is required for the where condition(s)")
     
-    # compute where script from whereParams
+    # compute where script from where
     try:
         # initialize group validation variables
         var groupsLen = 0
         var unspecifiedGroupCount = 0   # variable to determine group with empty/no fieldItems
 
-        groupsLen = whereParams.len()
+        groupsLen = where.len()
 
         # raise exception, if no group was specified or empty
         if(groupsLen < 1):
             raise newException(WhereQueryError, "No where-groups specified")
 
-        # sort whereParams by groupOrder (ASC)
-        var sortedGroups  = whereParams.sortedByIt(it.groupOrder)
+        # sort where by groupOrder (ASC)
+        var sortedGroups  = where.sortedByIt(it.groupOrder)
 
         # variable for valid group count, i.e. group with groupItems
         var groupCount = 0          
             
-        # iterate through whereParams (groups)
+        # iterate through where (groups)
         var whereQuery = " WHERE "
         for group in sortedGroups:
             var
@@ -373,7 +373,7 @@ proc computeWhereQuery*(whereParams: seq[WhereParam]): string =
                         # include values from SELECT query (e.g. lookup table/collection)
                         let fieldSubQuery = groupItem.fieldSubQuery
                         let fieldSelectQuery = computeSelectQuery(fieldSubQuery.collName, fieldSubQuery)
-                        let fieldWhereQuery = computeWhereQuery(fieldSubQuery.whereParams)
+                        let fieldWhereQuery = computeWhereQuery(fieldSubQuery.where)
                         inValues = fieldSelectQuery & " " & fieldWhereQuery & " )"
                         
                         fieldQuery = fieldQuery & " " & fieldname & " IN " & (inValues)
@@ -443,7 +443,7 @@ proc computeWhereQuery*(whereParams: seq[WhereParam]): string =
 
 ## createScript compose insert SQL script
 ## 
-proc computeCreateScript*(collName: string, actionParams: seq[QueryParam]): seq[string] = 
+proc computeCreateScript*(collName: string, actionParams: seq[QueryParamType]): seq[string] = 
     if collName == "" or actionParams.len < 1 :
         raise newException(CreateQueryError, "Table/collection name and action-params are required for the create operation")
     
@@ -507,7 +507,7 @@ proc computeCreateScript*(collName: string, actionParams: seq[QueryParam]): seq[
 
 ## updateScript compose update SQL script
 ## 
-proc computeUpdateScript*(collName: string, actionParams: seq[QueryParam], docIds: seq[string]): seq[string] =
+proc computeUpdateScript*(collName: string, actionParams: seq[QueryParamType], docIds: seq[string]): seq[string] =
     if docIds.len < 1 or collName == "" or actionParams.len < 1 :
         raise newException(UpdateQueryError, "Table/collection name, doc-ids and action-params are required for the update operation")
     
@@ -521,8 +521,8 @@ proc computeUpdateScript*(collName: string, actionParams: seq[QueryParam], docId
                 itemScript = "UPDATE " & collName & " SET"
                 fieldCount = 0
                 missingField = 0
-            let fieldLen = item.fieldItems.len
-            for field in item.fieldItems:
+            let fieldLen = item.fields.len
+            for field in item.fields:
                 # check missing fieldName/Value
                 if field.fieldName == "" or field.fieldValue == "":
                     inc missingField
@@ -584,12 +584,12 @@ proc computeDeleteByIdScript*(collName: string, docIds:seq[string]): string =
 
 ## deleteByParamScript compose delete SQL script by params
 ## 
-proc computeDeleteByParamScript*(collName: string, whereParams: seq[WhereParam]): string =
-    if whereParams.len < 1 or collName == "":
+proc computeDeleteByParamScript*(collName: string, where: seq[WhereParamType]): string =
+    if where.len < 1 or collName == "":
         raise newException(DeleteQueryError, "Table/collection name and where-params are required for the delete operation")
     try:
         var deleteScripts = ""
-        let whereParam = computeWhereQuery(whereParams)
+        let whereParam = computeWhereQuery(where)
         deleteScripts = "DELETE FROM " & collName & " " & whereParam
         return deleteScripts
     except:

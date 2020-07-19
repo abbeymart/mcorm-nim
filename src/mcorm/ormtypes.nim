@@ -193,6 +193,10 @@ type
         fieldSubQuery*: QueryParamType
         fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
 
+    GroupFunctionType* = object
+        fields*: seq[string]
+        fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX, custom... for select/read-query...
+
     WhereFieldType* = object
         fieldName*: string
         fieldOrder*: Positive
@@ -214,6 +218,7 @@ type
     SaveParamType* = object
         tableName*: string
         fields*: seq[SaveFieldType]
+        where*: seq[WhereFieldType]
     
     CreateParamType* = object
         tableName*: string
@@ -249,7 +254,7 @@ type
         where*: seq[WhereParamType] ## whereParams or docId(s)  will be required for delete task
 
     ## For SELECT TOP... query
-    QueryTop* = object         
+    QueryTopType* = object         
         topValue*: int    
         topUnit*: string ## number or percentage (# or %)
     
@@ -275,11 +280,12 @@ type
         tableName*: string
         fields*: seq[FieldItemType]
 
-    GroupByType* = object
-        fieldName*: string
+    GroupType* = object
+        fields*: seq[string]
+        fieldFunction*: seq[ProcedureTypes]
         fieldOrder*: int
 
-    OrderParamType* = object
+    OrderType* = object
         tableName*: string
         fieldName*: string
         queryProc*: ProcedureTypes
@@ -328,7 +334,7 @@ type
     UnionQueryType* = object
         selectQueryParams*: seq[QueryParamType]
         where*: seq[WhereParamType]
-        orderParams*: seq[OrderParamType]
+        orderParams*: seq[OrderType]
 
     RoleServiceType* = object
         serviceId*: string
@@ -384,7 +390,7 @@ type
         ## Field-values will be validated based on data model definition.
         ## ValueError exception will be raised for invalid value/data type 
         ##
-        actionParams*: seq[QueryParamType]
+        actionParams*: seq[SaveParamType]
         queryParam*: QueryParamType
         ## Bulk Insert Operation: 
         ## insertToParams {tableName: "abc", fieldNames: @["field1", "field2"]}
@@ -410,14 +416,14 @@ type
         joinQuery*: seq[JoinQueryType]
         unionQuery*: seq[UnionQueryType]
         queryDistinct*: bool
-        queryTop*: QueryTop
+        queryTop*: QueryTopType
         ## Query function
         queryFunctions*: seq[ProcedureTypes]
         ## orderParams = @[{tableName: "testing", fieldName: "name", fieldOrder: "ASC", queryProc: "COUNT", functionOrderr: "DESC"}] 
         ## An order-param without orderType will default to ASC (ascending-order)
         ## 
-        orderParams*: seq[OrderParamType]
-        groupBy*: seq[GroupByType] ## @[{fieldName: ""location", fieldOrder: 1}]
+        order*: seq[OrderType]
+        group*: seq[GroupType] ## @[{fieldName: ""location", fieldOrder: 1}]
         having*: seq[HavingType]
         caseQuery*: seq[CaseQueryType] 
         skip*: Natural

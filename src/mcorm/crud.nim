@@ -21,23 +21,23 @@ export helper, ormtypes
 proc newCrud*(appDb: Database; 
             tableName: string; 
             userInfo: UserParamType;
-            actionParams: seq[QueryParam] = @[];
-            queryParam: QueryParam = QueryParam();
+            actionParams: seq[SaveParamType] = @[];
+            queryParam: QueryParamType = QueryParamType();
             where: seq[WhereParamType] = @[];
             docIds: seq[string] = @[];
             inserInto: seq[InsertIntoType] = @[];
             selectFrom: seq[SelectFromType] = @[];
             selectInto: seq[SelectIntoType] = @[];
             queryFunctions: seq[ProcedureTypes] = @[];
-            orderParams: seq[OrderParamType] = @[];
-            groupBy: seq[GroupByType]  = @[];
+            order: seq[OrderType] = @[];
+            group: seq[GroupType]  = @[];
             having: seq[HavingType] = @[];
             caseQuery: seq[CaseQueryType]  = @[];
             subQuery: seq[SubQueryType] = @[];
             joinQuery: seq[JoinQueryType] = @[];
             unionQuery: seq[UnionQueryType] = @[];
             queryDistinct: bool = false;
-            queryTop: QueryTop = QueryTop();
+            queryTop: QueryTopType = QueryTopType();
             skip: Positive = 0;
             limit: Positive = 100000;
             defaultLimit: Positive = 100000;
@@ -74,8 +74,8 @@ proc newCrud*(appDb: Database;
     # Read
     result.queryFunctions = queryFunctions
     result.where = where
-    result.orderParams = orderParams
-    result.groupBy = groupBy
+    result.order = order
+    result.group = group
     result.having = having
     result.queryDistinct = queryDistinct
     result.queryTop= queryTop
@@ -212,7 +212,7 @@ proc checkAccess*(
         return getResMessage("notFound", ResponseMessage(value: nil, message: getCurrentExceptionMsg()))
 
 ## getCurrentRecord returns the current records for the CRUD task
-proc getCurrentRecord*(appDb: Database; tableName: string; queryParams: QueryParam; whereParams: seq[WhereParam]): ResponseMessage =
+proc getCurrentRecord*(appDb: Database; tableName: string; queryParams: QueryParamType; whereParams: seq[WhereParamType]): ResponseMessage =
     try:
         # compose query statement based on the whereParams
         var selectQuery = computeSelectQuery(tableName, queryParams)
