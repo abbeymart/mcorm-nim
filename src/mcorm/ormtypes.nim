@@ -90,11 +90,27 @@ type
     CreatedAtType* = DateTime
     UpdatedAtType* = DateTime
     
-    DefaultProcType*[R] = proc(): R {.closure.}
-    MethodProcType*[T, R] = proc(rec: T): R {.closure.}
-    ValidationProcType*[T] = proc(rec: T): bool {.closure.}
-    ConstraintProcType*[T] = proc(rec: T): bool {.closure.}
-    SupplierProcType*[R] = proc(): R {.closure.}
+    DefaultProcedureType*[R] = proc(): R {.closure.}
+    MethodProcedureType*[T, R] = proc(rec: T): R {.closure.}
+    ValidateProcedureType*[T] = proc(rec: T): bool {.closure.}
+    ConstraintProcedureType*[T] = proc(rec: T): bool {.closure.}
+    SupplierProceduceType*[R] = proc(): R {.closure.}
+
+    DefaultValueType* = object
+        fieldName*: string
+        defaultProc*: proc(): DataTypes
+    
+    ValidateType* = object
+        fieldName*: string
+        validateProc*: proc(): bool
+
+    ConstraintType* = object
+        fieldName*: string
+        constraintProc*: proc(): bool
+
+    MethodType* = object
+        fieldNames*: seq[string]
+        methodProc*: proc(): DataTypes
 
     FieldDescType* = object
         fieldType*: DataTypes
