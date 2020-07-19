@@ -45,25 +45,6 @@ type
 proc getCurrentDateTime(): DateTime =
     result = now().utc
 
-proc defaults(rec: Model): seq[ProcedureTypes] =
-    result = @[]
-
-proc methods(rec: Model): seq[ProcedureTypes] =
-    result = @[]
-
-proc constraints(rec: Model): seq[ProcedureTypes] =
-    result = @[]
-     
-proc validations(rec: Model): seq[ProcedureTypes] =
-    result = @[]
-
-proc fullName(rec: UserRecord): string =
-    let userRec = rec
-    result = if userRec.middleName != "":
-                userRec.firstName & " " & userRec.middleName & " " & userRec.lastName
-            else:
-                 userRec.firstName & " " & userRec.lastName
-
 proc User(): Model =
     # result.userRecord = UserRecord()
     # result.userModel = Model()
@@ -112,9 +93,40 @@ proc User(): Model =
     result.fieldTypes["isActive"] = DataTypes.BOOL
 
     # model methods/procs | initialize and/or define
-    result.defaults = defaults(result)
-    result.validations = validations(result)
-    result.constraints = constraints(result)
-    result.methods = methods(result)
+    # result.defaults = defaults(result)
+    # result.validations = validations(result)
+    # result.constraints = constraints(result)
+    # result.methods = methods(result)
 
 echo "user-model: " & User().repr
+
+
+proc defaults(rec: Model): seq[ProcedureTypes] =
+    result = @[]
+
+proc methods(rec: Model): seq[ProcedureTypes] =
+    result = @[]
+
+proc constraints(rec: Model): seq[ProcedureTypes] =
+    result = @[]
+     
+proc validations(rec: Model): seq[ProcedureTypes] =
+    result = @[]
+
+proc fullName(rec: UserRecord): string =
+    let userRec = rec
+    result = if userRec.middleName != "":
+                userRec.firstName & " " & userRec.middleName & " " & userRec.lastName
+            else:
+                 userRec.firstName & " " & userRec.lastName
+
+
+
+let rec = User()
+
+let 
+    defValues = defaults(rec)
+    met = methods(rec)
+    constr = constraints(rec)
+    validate = validations(rec)
+
