@@ -23,19 +23,19 @@ proc newCrud*(appDb: Database;
             userInfo: UserParamType;
             actionParams: seq[QueryParam] = @[];
             queryParam: QueryParam = QueryParam();
-            whereParams: seq[WhereParamType] = @[];
+            where: seq[WhereParamType] = @[];
             docIds: seq[string] = @[];
-            inserIntoParams: seq[InsertIntoParamType] = @[];
-            selectFromParams: seq[SelectFromParamType] = @[];
-            selectIntoParams: seq[SelectIntoParamType] = @[];
+            inserInto: seq[InsertIntoType] = @[];
+            selectFrom: seq[SelectFromType] = @[];
+            selectInto: seq[SelectIntoType] = @[];
             queryFunctions: seq[ProcedureTypes] = @[];
             orderParams: seq[OrderParamType] = @[];
-            groupParams: seq[GroupParamType]  = @[];
-            havingParams: seq[HavingParamType] = @[];
-            caseParams: seq[CaseQueryParamType]  = @[];
-            subQueryParams: seq[SubQueryParamType] = @[];
-            joinQueryParams: seq[JoinQueryParamType] = @[];
-            unionQueryParams: seq[UnionQueryParamType] = @[];
+            groupBy: seq[GroupByType]  = @[];
+            having: seq[HavingType] = @[];
+            caseQuery: seq[CaseQueryType]  = @[];
+            subQuery: seq[SubQueryType] = @[];
+            joinQuery: seq[JoinQueryType] = @[];
+            unionQuery: seq[UnionQueryType] = @[];
             queryDistinct: bool = false;
             queryTop: QueryTop = QueryTop();
             skip: Positive = 0;
@@ -67,21 +67,21 @@ proc newCrud*(appDb: Database;
     result.docIds = docIds
    
     # Create/Update
-    result.insertIntoParams = inserIntoParams
-    result.selectFromParams = selectFromParams
-    result.selectIntoParams = selectIntoParams
+    result.insertInto = inserInto
+    result.selectFrom = selectFrom
+    result.selectInto = selectInto
 
     # Read
     result.queryFunctions = queryFunctions
-    result.whereParams = whereParams
+    result.where = where
     result.orderParams = orderParams
-    result.groupParams = groupParams
-    result.havingParams = havingParams
+    result.groupBy = groupBy
+    result.having = having
     result.queryDistinct = queryDistinct
     result.queryTop= queryTop
-    result.joinQueryParams = joinQueryParams
-    result.unionQueryParams = unionQueryParams
-    result.caseParams = caseParams
+    result.joinQuery = joinQuery
+    result.unionQuery = unionQuery
+    result.caseQuery = caseQuery
     result.skip = skip
     result.limit = limit
     result.defaultLimit = defaultLimit
