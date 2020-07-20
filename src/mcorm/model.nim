@@ -17,7 +17,7 @@ import crud
 
 ## Model constructor: for table structure definition
 ## 
-proc newModel(appDb: Database;
+proc newModel*(appDb: Database;
         modelName: string;
         tableName: string;
         recordDesc: RecordDescType;
@@ -25,45 +25,43 @@ proc newModel(appDb: Database;
         relations: seq[RelationType];
         defaults: seq[DefaultValueType];
         validations: seq[ValidateType];
-        methods: seq[MethodType]): ModelType =
+        methods: seq[ProcedureType]): ModelType =
     result.appDb = appDb
     result.modelName = modelName
     result.tableName = tableName
     result.recordDesc = recordDesc
     result.timeStamp = timeStamp
     result.relations = relations
-    result.defaults = defaults
-    result.validations = validations
     result.methods = methods
 
 # CRUD constructor : imported
 
 ## Model methods
 ## 
-## createTable method for creating, altering, sync data (if exist)...
+## modelTable method for creating, altering, sync data (if exist)...
 ## 
-proc createTable(model: ModelType): ResponseMessage = 
+proc createTable*(model: ModelType): ResponseMessage = 
     result = getResMessage("success", ResponseMessage())
 
 # => part of the CRUD methods
 ## getRecords: read all records with or without condition(s), with skip and limit props
 ## Mainly for lookup tables, which require no access / permission => consolidate with getRecord(?)
 ## 
-proc getRecords(crud: CrudParamType): void = 
+proc getRecords*(crud: CrudParamType): void = 
     echo "get records"
 
 ## getRecord: read records read all records with or without condition(s), with skip and limit props
 ## Require access / permission
-proc getRecord(crud: CrudParamType): void = 
+proc getRecord*(crud: CrudParamType): void = 
     echo "get record(s)"
 
 ## saveRecord: create or update record(s) by access / permission (roles)
 ## 
-proc saveRecord(crud: CrudParamType): void = 
+proc saveRecord*(crud: CrudParamType): void = 
     echo "save record(s)"
 
 ## deleteRecord
-proc deleteRecord(crud: CrudParamType): void = 
+proc deleteRecord*(crud: CrudParamType): void = 
     echo "delete record"
 
 
@@ -94,17 +92,13 @@ type
     #     userRecord*: UserRecord
     #     userModel*: Model
 
-
-proc methods(rec: ModelType): seq[ProcedureTypes] =
-    result = @[]
-
-proc fullName(firstName, lastName: string; middleName = ""): string =
+proc fullName*(firstName, lastName: string; middleName = ""): string =
     result = if middleName != "":
                 firstName & " " & middleName & " " & lastName
             else:
                  firstName & " " & lastName
 
-proc getCurrentDateTime(): DateTime =
+proc getCurrentDateTime*(): DateTime =
     result = now().utc
 
 # Define model procedures
@@ -112,9 +106,13 @@ var userMethods = initTable[string, proc]()
 userMethods["getCurrentDateTime"] = getCurrentDateTime
 userMethods["fullName"] = fullName
 
+proc UUIDDefault*(): string =
+    result = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+
+proc UUIDValidate*(): bool = 
+    result = true
 
 proc UserModel(): ModelType =
-    echo "test model"
     var appDb = Database()     # TBD
     var userModel = ModelType()
 
@@ -137,8 +135,10 @@ proc UserModel(): ModelType =
         indexable: true,
         primaryKey: true,
         foreignKey: true,
-        # fieldMinValue*: float
-        # fieldMaxValue*: float
+        defautValue: UUIDDefault,
+        validate: UUIDValidate
+        # minValue*: float
+        # maxValue*: float
     )
 
     recordDesc["firstName"] = FieldDesc(
@@ -148,19 +148,6 @@ proc UserModel(): ModelType =
         fieldFormat: "XXXXXXXXXX",
         notNull: true,
     )
-
-    userModel = ModelType(
-        modelName: modelName,
-        tableName: tableName,
-        recordDesc: recordDesc,
-        timeStamp: timeStamp,
-        relations: @[],
-        defaults: @[],
-        validations: @[],
-        constraints: @[],
-        methods: @[],
-        appDb: appDb,
-    )n
 
     # model methods/procs | initialize and/or define
     let methods = @[
@@ -177,13 +164,18 @@ proc UserModel(): ModelType =
 
     # extend / instantiate model
     result = newModel(
-        modelName = modelName,
-        tableName = tableName,
+        modelName = "User",
+        tableName = "users",
         recordDesc = recordDesc,
-        timeStamp = timeStamp,
+        timeStamp = true,
         relations = @[],
         methods = methods,
         appDb = appDb,
     )
 
-echo "user-model: " & UserModel().repr
+
+
+var userMod = UserModel()
+echo "user-model: ", userMod.repr, " \n\n"
+var userTable = userMod.createTable()
+echo "create-table-result: ", $userTable

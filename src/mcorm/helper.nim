@@ -373,7 +373,7 @@ proc computeWhereQuery*(where: seq[WhereParamType]): string =
                     if groupItem.groupOp != "" and groupItemCount < (groupItemsLen - unspecifiedGroupItemCount):
                             fieldQuery = fieldQuery & " " & groupItem.groupOp & " "
                 of OpTypes.IN, OpTypes.INCLUDES:
-                    if groupItem.fieldSubQuery != QueryParam():
+                    if groupItem.fieldSubQuery != QueryParamType():
                         var inValues = "("
                         # include values from SELECT query (e.g. lookup table/collection)
                         let fieldSubQuery = groupItem.fieldSubQuery
@@ -425,9 +425,9 @@ proc computeWhereQuery*(where: seq[WhereParamType]): string =
             
             # validate acceptable groupLinkOperators (and || or)
             var grpLinkOp = group.groupLinkOp
-            var groupLnOp = @[OpTypes.AND, OpTypes.OR]
+            var groupLnOp = @["and", "or"]
             if grpLinkOp != "" and not groupLnOp.contains(grpLinkOp.toLower()):
-                grpLinkOp = OpTypes.AND       # use OpTypes.AND as default operator
+                grpLinkOp = "and"      # use OpTypes.AND as default operator
                 # raise newException(WhereQueryError, "Unacceptable group-link-operator (should be 'and', 'or')")
             
             # add optional groupLinkOp, if groupsLen > 1
@@ -448,7 +448,7 @@ proc computeWhereQuery*(where: seq[WhereParamType]): string =
 
 ## createScript compose insert SQL script
 ## 
-proc computeCreateScript*(tableName: string, actionParams: seq[QueryParamType]): seq[string] = 
+proc computeCreateScript*(tableName: string, actionParams: seq[SaveParamType]): seq[string] = 
     if tableName == "" or actionParams.len < 1 :
         raise newException(CreateQueryError, "Table/collection name and action-params are required for the create operation")
     
@@ -466,8 +466,8 @@ proc computeCreateScript*(tableName: string, actionParams: seq[QueryParamType]):
             var 
                 fieldCount = 0      # valid field count
                 missingField = 0    # invalid field name/value count
-            let fieldLen = item.fieldItems.len
-            for field in item.fieldItems:
+            let fieldLen = item.fields.len
+            for field in item.fields:
                 # check missing fieldName/Value
                 if field.fieldName == "" or field.fieldValue == "":
                     inc missingField

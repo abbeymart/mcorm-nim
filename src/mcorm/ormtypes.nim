@@ -184,6 +184,7 @@ type
 
     SaveFieldType* = object
         fieldName*: string
+        fieldType*: string
         fieldValue*: string
         fieldOrder*: Positive
         fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
