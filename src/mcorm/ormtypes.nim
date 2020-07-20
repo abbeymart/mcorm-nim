@@ -152,7 +152,8 @@ type
         relationType*: string   # one-to-one, one-to-many, many-to-one, many-to-many
         sourceField*: FieldDescType
         targetTable*: string
-        targetFields*: seq[FieldDescType]
+        targetField*: FieldDescType
+        relationTable*: string # optional tableName for many-to-many(default: sourceTable_targetTable)
 
     ModelType* = ref object
         modelName*: string
