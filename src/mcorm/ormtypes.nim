@@ -86,11 +86,25 @@ type
         ANY,
         ALL,
 
+    QueryTypes* = enum
+        SELECT,
+        SAVE,
+        INSERT,
+        UPDATE,
+        DELETE,
+        INSERTINTO,
+        SELECTFROM,
+        CASE,
+        UNION,
+        JOIN,
+        SUB,
+
     OrderTypes* = enum
         ASC,
         DESC,
 
     uuId* = string
+
 
     CreatedByType* = uuId
     UpdatedByType* = uuId
