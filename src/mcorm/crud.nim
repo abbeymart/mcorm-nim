@@ -41,11 +41,11 @@ proc newCrud*(appDb: Database;
             skip: Positive = 0;
             limit: Positive = 100000;
             defaultLimit: Positive = 100000;
-            auditColl: string = "audits";
-            accessColl: string = "accesskeys";
-            serviceColl: string = "services";
-            roleColl: string = "roles";
-            userColl: string = "users";
+            auditTable: string = "audits";
+            accessTable: string = "accesskeys";
+            serviceTable: string = "services";
+            roleTable: string = "roles";
+            userTable: string = "users";
             accessDb: Database = appDb;
             auditDb: Database = appDb;
             logAll: bool = false;
@@ -54,7 +54,7 @@ proc newCrud*(appDb: Database;
             logUpdate: bool = false;
             logDelete: bool = false;
             checkAccess: bool = true;
-            transLog: LogParam = LogParam(auditDb: auditDb, auditColl: auditColl);
+            transLog: LogParam = LogParam(auditDb: auditDb, auditTable: auditTable);
             options: Table[string, DataTypes]): CrudParamType =
     
     # new result
@@ -87,11 +87,11 @@ proc newCrud*(appDb: Database;
     result.defaultLimit = defaultLimit
 
     # Shared
-    result.auditColl = auditColl
-    result.accessColl = accessColl
-    result.auditColl = auditColl
-    result.roleColl = roleColl
-    result.userColl = userColl
+    result.auditTable = auditTable
+    result.accessTable = accessTable
+    result.auditTable = auditTable
+    result.roleTable = roleTable
+    result.userTable = userTable
     result.auditDb = auditDb
     result.accessDb = accessDb
     result.logAll = logAll
@@ -102,14 +102,14 @@ proc newCrud*(appDb: Database;
     result.checkAccess = checkAccess
 
     # translog instance
-    result.transLog = newLog(result.auditDb, result.auditColl)
+    result.transLog = newLog(result.auditDb, result.auditTable)
 
 ## getRoleServices returns the role-service records for the authorized user and transactions
 proc getRoleServices*(
                     accessDb: Database;
                     userGroup: string;
                     serviceIds: seq[string];   # for any tasks (record, coll/table, function, package, solution...)
-                    roleColl: string = "roles";
+                    roleTable: string = "roles";
                     ): seq[RoleServiceType] =
     var roleServices: seq[RoleServiceType] = @[]
     try:
@@ -117,7 +117,7 @@ proc getRoleServices*(
         let itemIds = serviceIds.join(", ")
 
         var roleQuery = sql("SELECT service_id, group, category, can_create, can_read, can_update, can_delete FROM " &
-                         roleColl & " WHERE group = " & userGroup & " AND service_id IN (" & itemIds & ") " &
+                         roleTable & " WHERE group = " & userGroup & " AND service_id IN (" & itemIds & ") " &
                          " AND is_active = true")
         
         let queryResult = accessDb.db.getAllRows(roleQuery)
@@ -143,15 +143,15 @@ proc checkAccess*(
                 userInfo: UserParamType;
                 tableName: string;
                 docIds: seq[string] = @[];    # for update, delete and read tasks 
-                accessColl: string = "accesskeys";
-                userColl: string = "users";
-                roleColl: string = "roles";
-                serviceColl: string = "services";
+                accessTable: string = "accesskeys";
+                userTable: string = "users";
+                roleTable: string = "roles";
+                serviceTable: string = "services";
                 ): ResponseMessage =
     # validate current user active status: by token (API) and user/loggedIn-status
     try:
         # check active login session
-        let accessQuery = sql("SELECT expire, user_id FROM " & accessColl & " WHERE user_id = " &
+        let accessQuery = sql("SELECT expire, user_id FROM " & accessTable & " WHERE user_id = " &
                             userInfo.id & " AND token = " & userInfo.token &
                             " AND login_name = " & userInfo.loginName)
 
@@ -165,7 +165,7 @@ proc checkAccess*(
             return getResMessage("unAuthorized", ResponseMessage(value: nil, message: "Unauthorized: please ensure that you are logged-in") )
 
         # check current current-user status/info
-        let userQuery = sql("SELECT id, active_group, groups, is_active, profile FROM " & userColl &
+        let userQuery = sql("SELECT id, active_group, groups, is_active, profile FROM " & userTable &
                             " WHERE id = " & userInfo.id & " AND is_active = true")
 
         let currentUser = accessDb.db.getRow(userQuery)
@@ -174,8 +174,8 @@ proc checkAccess*(
             return getResMessage("unAuthorized", ResponseMessage(value: nil, message: "Unauthorized: user information not found or inactive") )
 
         # if all the above checks passed, check for role-services access by taskType
-        # obtain tableName - collId (id) from serviceColl/Table (holds all accessible resources)
-        var collInfoQuery = sql("SELECT id from " & serviceColl &
+        # obtain tableName - collId (id) from serviceTable/Table (holds all accessible resources)
+        var collInfoQuery = sql("SELECT id from " & serviceTable &
                                 " WHERE name = " & tableName )
 
         let collInfo = accessDb.db.getRow(collInfoQuery)
@@ -193,7 +193,7 @@ proc checkAccess*(
             roleServices = getRoleServices(accessDb = accessDb,
                                         serviceIds = serviceIds,
                                         userGroup = currentUser[1],
-                                        roleColl = roleColl)
+                                        roleTable = roleTable)
         # userRoles: {roles: ["cd", "ef", "gh"]}
         # TODO: check/validate parseJson result of the currentUser jsonb string value
         let accessRes = CheckAccess(userId: currentUser[0],

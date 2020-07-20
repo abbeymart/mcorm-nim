@@ -17,17 +17,22 @@ type
     DataTypes* = enum
         STRING,
         TEXT,
+        VARCHAR,
         UUID,
+        NUMBER,
         POSITIVE,
         INT,
         FLOAT,
         BOOL,
+        BOOLEAN,
         JSON,
         BIGINT,
         BIGFLOAT,
         DATE,
         DATETIME,
         TIMESTAMP,
+        TIMESTAMPZ,
+        TIME,
         OBJECT,     ## key-value pairs
         ENUM,       ## Enumerations
         SET,        ## Unique values set
@@ -60,13 +65,14 @@ type
         EQ,
         GT,
         GTE,
-        LE,
+        LT,
         LTE,
         IN,
+        NEQ,
         NOTIN,
         BETWEEN,
         NOTBETWEEN,
-        INCLUDE,
+        INCLUDES,
         LIKE,
         NOTLIKE,
         STARTSWITH,
@@ -84,8 +90,10 @@ type
         ASC,
         DESC,
 
-    CreatedByType* = DataTypes
-    UpdatedByType* = DataTypes
+    uuId* = string
+
+    CreatedByType* = uuId
+    UpdatedByType* = uuId
     CreatedAtType* = DateTime
     UpdatedAtType* = DateTime
     
@@ -102,9 +110,10 @@ type
         fieldName*: string
         validateProc*: proc(): bool
 
-    MethodType* = object
-        fieldNames*: seq[string]
-        methodProc*: proc(): DataTypes
+    ProcedureType* = object
+        procName*: string             # key of the Table containing the custom methods/procs
+        fieldNames*: seq[string]      # to match the custom method/proc args
+        procReturnType*: DataTypes    # return type of the method/proc
 
     FieldDescType* = object
         fieldType*: DataTypes
@@ -116,9 +125,10 @@ type
         indexable*: bool
         primaryKey*: bool
         foreignKey*: bool
-        fieldMinValue*: float
-        fieldMaxValue*: float
-        fieldDefaultValue*: ProcedureTypes
+        minValue*: float
+        maxValue*: float
+        defaultValue*: proc(): FieldDescType.fieldType  # result: fieldType
+        validate*: proc(): bool        # the proc that returns a bool (valid=true/invalid=false)
         
     RecordDescType* = Table[string, FieldDescType ]
 
@@ -136,9 +146,7 @@ type
         recordDesc*: RecordDescType
         timeStamp*: bool
         relations*: seq[RelationType]
-        defaults*: seq[DefaultValueType]
-        validations*: seq[ValidateType]
-        methods*: seq[MethodType]
+        methods*: seq[ProcedureType]
         appDb*: Database
 
     ## User/client information to be provided after successful login
@@ -169,7 +177,7 @@ type
         fieldValues*: seq[string] ## values for IN/NOTIN operator
         fieldSubQuery*: QueryParamType ## for WHERE IN (SELECT field from fieldTable)
         fieldPostOp*: OpTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
-        groupOp*: OpTypes     ## e.g. AND | OR...
+        groupOp*: string     ## e.g. AND | OR...
         fieldAlias*: string ## for SELECT/Read query
         show*: bool     ## includes or excludes from the SELECT query fields
         fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
@@ -208,6 +216,7 @@ type
 
     WhereFieldType* = object
         fieldTable*: string
+        fieldType*: DataTypes
         fieldName*: string
         fieldOrder*: Positive
         fieldOp*: OpTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
@@ -216,12 +225,13 @@ type
         fieldValues*: seq[string] ## values for IN/NOTIN operator
         fieldSubQuery*: QueryParamType ## for WHERE IN (SELECT field from fieldTable)
         fieldPostOp*: OpTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
-        groupOp*: OpTypes     ## e.g. AND | OR...
-        fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
+        groupOp*: string     ## e.g. AND | OR...
+        fieldProc*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
+        fieldProcFields*: seq[string] ## parameters for the fieldProc
 
     WhereParamType* = object
         groupCat*: string       # group (items) categorization
-        groupLinkOp*: OpTypes        # group relationship to the next group (AND, OR)
+        groupLinkOp*: string        # group relationship to the next group (AND, OR)
         groupOrder*: Positive        # group order, the last group groupLinkOp should be "" or will be ignored
         groupItems*: seq[WhereFieldType] # group items to be composed by category
 
@@ -441,11 +451,11 @@ type
         defaultLimit*: Positive
         ## Database, audit-log and access parameters 
         ## 
-        auditColl*: string
-        accessColl*: string
-        serviceColl*: string
-        roleColl*: string
-        userColl*: string
+        auditTable*: string
+        accessTable*: string
+        serviceTable*: string
+        roleTable*: string
+        userTable*: string
         appDb*: Database
         accessDb*: Database
         auditDb*: Database

@@ -47,7 +47,7 @@ proc strToTime*(val: string): Time =
         result = fromUnix(val.parseInt)
     except:
         # return the current time
-        return Time()
+        return getTime()
 
 
 ## computeCreateTableScript
@@ -263,10 +263,12 @@ proc computeWhereQuery*(where: seq[WhereParamType]): string =
                 if groupItem.fieldTable != "":
                     fieldname = groupItem.fieldTable & "." & groupItem.fieldName
 
-                case groupItem.fieldOp.toLower():
-                of "eq", "=":
+                var groupItemGroupOp = ""
+
+                case groupItem.fieldOp:
+                of OpTypes.EQ:
                     case groupItem.fieldType
-                    of "string", "uuid", "text", "varchar":
+                    of DataTypes.STRING, DataTypes.UUID, DataTypes.TEXT, DataTypes.VARCHAR:
                         fieldQuery.add(" ")
                         fieldQuery.add(groupItem.fieldName)
                         fieldQuery.add(" = ")
@@ -274,7 +276,7 @@ proc computeWhereQuery*(where: seq[WhereParamType]): string =
                         fieldQuery.add(groupItem.fieldValue)
                         fieldQuery.add("'")
                         fieldQuery.add(" ")
-                    of "int", "float", "number", "bool", "boolean", "time":
+                    of DataTypes.INT, DataTypes.FLOAT, DataTypes.NUMBER, DataTypes.BOOL, DataTypes.BOOLEAN, DataTypes.TIME:
                         fieldQuery.add(" ")
                         fieldQuery.add(groupItem.fieldName)
                         fieldQuery.add(" = ")
@@ -285,9 +287,9 @@ proc computeWhereQuery*(where: seq[WhereParamType]): string =
                     
                     if groupItem.groupOp != "" and groupItemCount < (groupItemsLen - unspecifiedGroupItemCount):
                             fieldQuery = fieldQuery & " " & groupItem.groupOp
-                of "neq", "!=", "<>":
+                of OpTypes.NEQ:
                     case groupItem.fieldType
-                    of "string", "uuid", "text", "varchar":
+                    of DataTypes.STRING, DataTypes.UUID, DataTypes.TEXT, DataTypes.VARCHAR:
                         fieldQuery.add(" ")
                         fieldQuery.add(groupItem.fieldName)
                         fieldQuery.add(" <> ")
@@ -295,7 +297,7 @@ proc computeWhereQuery*(where: seq[WhereParamType]): string =
                         fieldQuery.add(groupItem.fieldValue)
                         fieldQuery.add("'")
                         fieldQuery.add(" ")
-                    of "int", "float", "number", "bool", "boolean", "time":
+                    of DataTypes.INT, DataTypes.FLOAT, DataTypes.NUMBER, DataTypes.BOOL, DataTypes.BOOLEAN, DataTypes.TIME:
                         fieldQuery.add(" ")
                         fieldQuery.add(groupItem.fieldName)
                         fieldQuery.add(" <> ")
@@ -306,12 +308,12 @@ proc computeWhereQuery*(where: seq[WhereParamType]): string =
                     
                     if groupItem.groupOp != "" and groupItemCount < (groupItemsLen - unspecifiedGroupItemCount):
                             fieldQuery = fieldQuery & " " & groupItem.groupOp & " "
-                of "lt", "<":
+                of OpTypes.LT:
                     case groupItem.fieldType
-                    of "string", "uuid", "text", "varchar":
+                    of DataTypes.STRING, DataTypes.UUID, DataTypes.TEXT, DataTypes.VARCHAR:
                         inc unspecifiedGroupItemCount
                         continue
-                    of "int", "float", "number", "time":
+                    of DataTypes.INT, DataTypes.FLOAT, DataTypes.NUMBER, DataTypes.TIME:
                         fieldQuery.add(" ")
                         fieldQuery.add(groupItem.fieldName)
                         fieldQuery.add(" < ")
@@ -322,12 +324,12 @@ proc computeWhereQuery*(where: seq[WhereParamType]): string =
                     
                     if groupItem.groupOp != "" and groupItemCount < (groupItemsLen - unspecifiedGroupItemCount):
                             fieldQuery = fieldQuery & " " & groupItem.groupOp & " "
-                of "lte", "<=":
+                of OpTypes.LTE:
                     case groupItem.fieldType
-                    of "string", "uuid", "text", "varchar":
+                    of DataTypes.STRING, DataTypes.UUID, DataTypes.TEXT, DataTypes.VARCHAR:
                         inc unspecifiedGroupItemCount
                         continue
-                    of "int", "float", "number", "time":
+                    of DataTypes.INT, DataTypes.FLOAT, DataTypes.NUMBER, DataTypes.TIME:
                         fieldQuery.add(" ")
                         fieldQuery.add(groupItem.fieldName)
                         fieldQuery.add(" <= ")
@@ -338,12 +340,12 @@ proc computeWhereQuery*(where: seq[WhereParamType]): string =
                     
                     if groupItem.groupOp != "" and groupItemCount < (groupItemsLen - unspecifiedGroupItemCount):
                             fieldQuery = fieldQuery & " " & groupItem.groupOp & " "
-                of "gte", ">=":
+                of OpTypes.GTE:
                     case groupItem.fieldType
-                    of "string", "uuid", "text", "varchar":
+                    of DataTypes.STRING, DataTypes.UUID, DataTypes.TEXT, DataTypes.VARCHAR:
                         inc unspecifiedGroupItemCount
                         continue
-                    of "int", "float", "number", "time":
+                    of DataTypes.INT, DataTypes.FLOAT, DataTypes.NUMBER, DataTypes.TIME:
                         fieldQuery.add(" ")
                         fieldQuery.add(groupItem.fieldName)
                         fieldQuery.add(" >= ")
@@ -354,12 +356,12 @@ proc computeWhereQuery*(where: seq[WhereParamType]): string =
                     
                     if groupItem.groupOp != "" and groupItemCount < (groupItemsLen - unspecifiedGroupItemCount):
                             fieldQuery = fieldQuery & " " & groupItem.groupOp & " "
-                of "gt", ">":
+                of OpTypes.GT:
                     case groupItem.fieldType
-                    of "string", "uuid", "text", "varchar":
+                    of DataTypes.STRING, DataTypes.UUID, DataTypes.TEXT, DataTypes.VARCHAR:
                         inc unspecifiedGroupItemCount
                         continue
-                    of "int", "float", "number", "time":
+                    of DataTypes.INT, DataTypes.FLOAT, DataTypes.NUMBER, DataTypes.TIME:
                         fieldQuery.add(" ")
                         fieldQuery.add(groupItem.fieldName)
                         fieldQuery.add(" > ")
@@ -370,7 +372,7 @@ proc computeWhereQuery*(where: seq[WhereParamType]): string =
                     
                     if groupItem.groupOp != "" and groupItemCount < (groupItemsLen - unspecifiedGroupItemCount):
                             fieldQuery = fieldQuery & " " & groupItem.groupOp & " "
-                of "in", "includes":
+                of OpTypes.IN, OpTypes.INCLUDES:
                     if groupItem.fieldSubQuery != QueryParam():
                         var inValues = "("
                         # include values from SELECT query (e.g. lookup table/collection)
@@ -397,7 +399,7 @@ proc computeWhereQuery*(where: seq[WhereParamType]): string =
                                 continue
                             inc valCount
                             case groupItem.fieldType
-                            of "string", "uuid", "text", "varchar":
+                            of DataTypes.STRING, DataTypes.UUID, DataTypes.TEXT, DataTypes.VARCHAR:
                                 inValues.add("'")
                                 inValues.add(itemValue)
                                 inValues.add("'")
@@ -423,9 +425,9 @@ proc computeWhereQuery*(where: seq[WhereParamType]): string =
             
             # validate acceptable groupLinkOperators (and || or)
             var grpLinkOp = group.groupLinkOp
-            var groupLnOp = @["and", "or"]
+            var groupLnOp = @[OpTypes.AND, OpTypes.OR]
             if grpLinkOp != "" and not groupLnOp.contains(grpLinkOp.toLower()):
-                grpLinkOp = "and"       # use "and" as default operator
+                grpLinkOp = OpTypes.AND       # use OpTypes.AND as default operator
                 # raise newException(WhereQueryError, "Unacceptable group-link-operator (should be 'and', 'or')")
             
             # add optional groupLinkOp, if groupsLen > 1
@@ -479,7 +481,7 @@ proc computeCreateScript*(tableName: string, actionParams: seq[QueryParamType]):
                     itemScript.add(" ")
                 
                 case field.fieldType
-                of "string", "uuid", "text", "varchar":
+                of DataTypes.STRING, DataTypes.UUID, DataTypes.TEXT, DataTypes.VARCHAR:
                     itemValues.add("'")
                     itemValues.add(field.fieldValue)
                     itemValues.add("'")
@@ -536,7 +538,7 @@ proc computeUpdateScript*(tableName: string, actionParams: seq[QueryParamType], 
                 itemScript.add(" = ")
                 
                 case field.fieldType
-                of "string", "uuid", "text", "varchar":
+                of DataTypes.STRING, DataTypes.UUID, DataTypes.TEXT, DataTypes.VARCHAR:
                     itemScript.add("'")
                     itemScript.add(field.fieldValue)
                     itemScript.add("'")

@@ -15,7 +15,8 @@
 import ormtypes, times, tables, mcresponse, mcdb
 import crud
 
-# Model constructor: 
+## Model constructor: for table structure definition
+## 
 proc newModel(appDb: Database;
         modelName: string;
         tableName: string;
@@ -37,25 +38,36 @@ proc newModel(appDb: Database;
 
 # CRUD constructor : imported
 
-# Model methods
+## Model methods
+## 
+## createTable method for creating, altering, sync data (if exist)...
+## 
 proc createTable(model: ModelType): ResponseMessage = 
     result = getResMessage("success", ResponseMessage())
 
+# => part of the CRUD methods
+## getRecords: read all records with or without condition(s), with skip and limit props
+## Mainly for lookup tables, which require no access / permission => consolidate with getRecord(?)
+## 
 proc getRecords(crud: CrudParamType): void = 
     echo "get records"
 
+## getRecord: read records read all records with or without condition(s), with skip and limit props
+## Require access / permission
 proc getRecord(crud: CrudParamType): void = 
     echo "get record(s)"
 
+## saveRecord: create or update record(s) by access / permission (roles)
+## 
 proc saveRecord(crud: CrudParamType): void = 
     echo "save record(s)"
 
+## deleteRecord
 proc deleteRecord(crud: CrudParamType): void = 
     echo "delete record"
 
 
 # Examples:
-
 type 
     Profile* = object
         isAdmin*: bool
@@ -83,24 +95,22 @@ type
     #     userModel*: Model
 
 
-proc defaults(rec: ModelType): seq[ProcedureTypes] =
-    result = @[]
-
 proc methods(rec: ModelType): seq[ProcedureTypes] =
     result = @[]
-     
-proc validations(rec: ModelType): seq[ProcedureTypes] =
-    result = @[]
 
-proc fullName(rec: UserRecord): string =
-    let userRec = rec
-    result = if userRec.middleName != "":
-                userRec.firstName & " " & userRec.middleName & " " & userRec.lastName
+proc fullName(firstName, lastName: string; middleName = ""): string =
+    result = if middleName != "":
+                firstName & " " & middleName & " " & lastName
             else:
-                 userRec.firstName & " " & userRec.lastName
+                 firstName & " " & lastName
 
 proc getCurrentDateTime(): DateTime =
     result = now().utc
+
+# Define model procedures
+var userMethods = initTable[string, proc]()
+userMethods["getCurrentDateTime"] = getCurrentDateTime
+userMethods["fullName"] = fullName
 
 
 proc UserModel(): ModelType =
@@ -150,14 +160,20 @@ proc UserModel(): ModelType =
         constraints: @[],
         methods: @[],
         appDb: appDb,
-    )
+    )n
 
     # model methods/procs | initialize and/or define
-    let 
-        defaults = defaults(userModel)
-        validations = validations(userModel)
-        constraints = constraints(userModel)
-        methods = methods(userModel)
+    let methods = @[
+        ProcedureType(
+            procName: "fullName",
+            fieldNames: @["firstName", "lastName", "middleName"],
+            procReturnType: DataTypes.STRING
+        ),
+        ProcedureType(
+            procName: "getCurrentDateTime",
+            procReturnType: DateTime
+        )
+    ]
 
     # extend / instantiate model
     result = newModel(
@@ -166,9 +182,6 @@ proc UserModel(): ModelType =
         recordDesc = recordDesc,
         timeStamp = timeStamp,
         relations = @[],
-        defaults = defaults,
-        validations = validations,
-        constraints = constraints,
         methods = methods,
         appDb = appDb,
     )
