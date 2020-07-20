@@ -51,6 +51,19 @@ proc strToTime*(val: string): Time =
 
 
 ## computeCreateTableScript
+## 
+proc computeCreateTableScript*(tableName: string; model: ModelType): string =
+    result = ""
+
+## computeAlterTableScript: alter script for an existing table with different structure
+## 
+proc computeAlterTableScript*(tableName: string; model: ModelType): string =
+    result = ""
+
+## computeSyncTableScript: to sync existing table data, for changed table structure
+## 
+proc computeSyncTableScript*(tableName: string; model: ModelType): string =
+    result = ""
 
 ## computeSelectByIdScript compose select SQL script by id(s) 
 ## 
