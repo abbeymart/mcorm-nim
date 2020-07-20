@@ -105,7 +105,6 @@ type
 
     uuId* = string
 
-
     CreatedByType* = uuId
     UpdatedByType* = uuId
     CreatedAtType* = DateTime
@@ -147,6 +146,14 @@ type
     RecordDescType* = Table[string, FieldDescType ]
 
     FieldTypes* = Table[string, DataTypes ]
+    
+    RelationOptionType* = enum
+        # RESTRICT, CASCADE, NO ACTION, SET DEFAULT and SET NULL
+        RESTRICT,
+        CASCASDE,
+        NOACTION,
+        SETDEFAULT,
+        SETNULL,
 
     RelationType* = ref object
         relationType*: string   # one-to-one, one-to-many, many-to-one, many-to-many
@@ -154,6 +161,8 @@ type
         targetTable*: string
         targetField*: FieldDescType
         relationTable*: string # optional tableName for many-to-many(default: sourceTable_targetTable)
+        onDelete*: RelationOptionType
+        onUpdate*: RelationOptionType
 
     ModelType* = ref object
         modelName*: string
