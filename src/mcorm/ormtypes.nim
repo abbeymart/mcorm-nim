@@ -167,8 +167,7 @@ type
         recordDesc*: RecordDescType
         timeStamp*: bool            ## auto-add: createdAt and updatedAt
         actorStamp*: bool           ## auto-add: createdBy and updatedBy
-        activeStamp*: bool          ## record active status (true | false)
-        passiveDelete*: bool        ## will set(update) isActive to false, instead of actual delete | to force delete, change to false on delete
+        activeStamp*: bool          ## record active status, isActive (true | false)
         relations*: seq[RelationType]
         methods*: seq[ProcedureType]    ## model-level procs, e.g fullName(a, b: T): T
         appDb*: Database            ## Db handle
