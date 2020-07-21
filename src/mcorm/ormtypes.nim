@@ -123,7 +123,7 @@ type
 
     FieldDescType* = object
         fieldType*: DataTypes
-        fieldLength*: Positive
+        fieldLength*: int
         fieldPattern*: string # "![0-9]" => excluding digit 0 to 9 | "![_, -, \, /, *, |, ]" => exclude the charaters
         fieldFormat*: string # "12.2" => max 12 digits, including 2 digits after the decimal
         notNull*: bool
@@ -172,32 +172,10 @@ type
         methods*: seq[ProcedureType]    ## model-level procs, e.g fullName(a, b: T): T
         appDb*: Database            ## Db handle
 
-    # fieldValue(s) are string type for params parsing convenience,
-    # fieldValue(s) will be cast by supported fieldType(s), else will through ValueError exception
-    # fieldOp: GT, EQ, GTE, LT, LTE, NEQ(<>), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
-    # groupOp/groupLinkOp: AND | OR
-    # groupCat: user-defined, e.g. "age-policy", "demo-group"
-    # groupOrder: user-defined e.g. 1, 2...
-    FieldItemType* = object
-        fieldTable*: string
-        fieldName*: string
-        fieldType*: DataTypes   ## "int", "string", "bool", "boolean", "float",...
-        fieldOrder*: Positive
-        fieldOp*: OpTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
-        fieldValue*: string  ## for insert/update | start value for range/BETWEEN/NOTBETWEEN and pattern for LIKE operators
-        fieldValueEnd*: string   ## end value for range/BETWEEN/NOTBETWEEN operator
-        fieldValues*: seq[string] ## values for IN/NOTIN operator
-        fieldSubQuery*: QueryParamType ## for WHERE IN (SELECT field from fieldTable)
-        fieldPostOp*: OpTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
-        groupOp*: string     ## e.g. AND | OR...
-        fieldAlias*: string ## for SELECT/Read query
-        show*: bool     ## includes or excludes from the SELECT query fields
-        fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
-
     SaveFieldType* = object
         fieldName*: string
         fieldValue*: string
-        fieldOrder*: Positive
+        fieldOrder*: int
         fieldType*: DataTypes
         fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
 
@@ -208,13 +186,13 @@ type
     UpdateFieldType* = object
         fieldName*: string
         fieldValue*: string
-        fieldOrder*: Positive
+        fieldOrder*: int
         fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
 
     ReadFieldType* = object
         tableName*: string
         fieldName*: string
-        fieldOrder*: Positive
+        fieldOrder*: int
         fieldAlias*: string
         show*: bool     ## includes or excludes from the SELECT query fields
         fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
@@ -237,12 +215,12 @@ type
         fieldTable*: string
         fieldType*: DataTypes
         fieldName*: string
-        fieldOrder*: Positive
+        fieldOrder*: int
         fieldOp*: OpTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
         fieldValue*: string  ## for insert/update | start value for range/BETWEEN/NOTBETWEEN and pattern for LIKE operators
         fieldValueEnd*: string   ## end value for range/BETWEEN/NOTBETWEEN operator
         fieldValues*: seq[string] ## values for IN/NOTIN operator
-        fieldSubQuery*: FieldSubQueryType ## for WHERE IN (SELECT field from fieldTable)
+        fieldSubQuery*: QueryReadParamType ## for WHERE IN (SELECT field from fieldTable)
         fieldPostOp*: OpTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
         groupOp*: string     ## e.g. AND | OR...
         fieldProc*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
@@ -251,38 +229,15 @@ type
     WhereParamType* = object
         groupCat*: string       # group (items) categorization
         groupLinkOp*: string        # group relationship to the next group (AND, OR)
-        groupOrder*: Positive        # group order, the last group groupLinkOp should be "" or will be ignored
+        groupOrder*: int        # group order, the last group groupLinkOp should be "" or will be ignored
         groupItems*: seq[WhereFieldType] # group items to be composed by category
 
     SaveParamType* = object
         tableName*: string
         fields*: seq[SaveFieldType]
         where*: seq[WhereParamType]
-    
-    CreateParamType* = object
-        tableName*: string
-        fields*: seq[CreateFieldType]
-    
-    UpdateParamType* = object
-        tableName*: string
-        fields*: seq[UpdateFieldType]
-        where*: seq[WhereParamType]
-    
-    ReadParamType* = object
-        tableName*: string
-        fields*: seq[ReadFieldType]
-        where*: seq[WhereFieldType]
-    
-    DeleteParamType* = object
-        tableName*: string
-        fields*: seq[DeleteFieldType]
-        where*: seq[WhereParamType]
-        
-    ## fields=> specify fields/parameters to match the arguments for the functionType.
-    ## The field item type must match the argument types expected by the functionType, 
-    ## otherwise the only the first function-matching field will be used, as applicable
-        
-    QueryParamType* = object        # TODO: Generic => make specific to CRUD operations
+   
+    QueryParamType* = object        # same as QueryReadParamType
         tableName*: string    ## default: "" => will use instance tableName instead
         fields*: seq[ReadFieldType]   ## @[] => SELECT * (all fields)
         where*: seq[WhereParamType] ## whereParams or docId(s)  will be required for delete task
@@ -313,8 +268,25 @@ type
         topUnit*: string ## number or percentage (# or %)
     
     ## SELECT CASE... query condition(s)
+    ## 
+    CaseFieldType* = object
+        fieldTable*: string
+        fieldName*: string
+        fieldType*: DataTypes   ## "int", "string", "bool", "boolean", "float",...
+        fieldOrder*: int
+        fieldOp*: OpTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
+        fieldValue*: string  ## for insert/update | start value for range/BETWEEN/NOTBETWEEN and pattern for LIKE operators
+        fieldValueEnd*: string   ## end value for range/BETWEEN/NOTBETWEEN operator
+        fieldValues*: seq[string] ## values for IN/NOTIN operator
+        fieldSubQuery*: QueryParamType ## for WHERE IN (SELECT field from fieldTable)
+        fieldPostOp*: OpTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
+        groupOp*: string     ## e.g. AND | OR...
+        fieldAlias*: string ## for SELECT/Read query
+        show*: bool     ## includes or excludes from the SELECT query fields
+        fieldFunction*: ProcedureTypes
+
     CaseConditionType* = object
-        fields*: seq[FieldItemType]
+        fields*: seq[CaseFieldType]
         resultMessage*: string
         resultField*: string  ## for ORDER BY options
 
@@ -326,13 +298,45 @@ type
         orderBy*: bool
         asField*: string
 
+    SelectFromFieldType* = object
+        fieldTable*: string
+        fieldName*: string
+        fieldType*: DataTypes   ## "int", "string", "bool", "boolean", "float",...
+        fieldOrder*: int
+        fieldOp*: OpTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
+        fieldValue*: string  ## for insert/update | start value for range/BETWEEN/NOTBETWEEN and pattern for LIKE operators
+        fieldValueEnd*: string   ## end value for range/BETWEEN/NOTBETWEEN operator
+        fieldValues*: seq[string] ## values for IN/NOTIN operator
+        fieldSubQuery*: QueryParamType ## for WHERE IN (SELECT field from fieldTable)
+        fieldPostOp*: OpTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
+        groupOp*: string     ## e.g. AND | OR...
+        fieldAlias*: string ## for SELECT/Read query
+        show*: bool     ## includes or excludes from the SELECT query fields
+        fieldFunction*: ProcedureTypes
+
     SelectFromType* = object
         tableName*: string
-        fields*: seq[FieldItemType]
+        fields*: seq[SelectFromFieldType]
+
+    InsertIntoFieldType* = object
+        fieldTable*: string
+        fieldName*: string
+        fieldType*: DataTypes   ## "int", "string", "bool", "boolean", "float",...
+        fieldOrder*: int
+        fieldOp*: OpTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
+        fieldValue*: string  ## for insert/update | start value for range/BETWEEN/NOTBETWEEN and pattern for LIKE operators
+        fieldValueEnd*: string   ## end value for range/BETWEEN/NOTBETWEEN operator
+        fieldValues*: seq[string] ## values for IN/NOTIN operator
+        fieldSubQuery*: QueryParamType ## for WHERE IN (SELECT field from fieldTable)
+        fieldPostOp*: OpTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
+        groupOp*: string     ## e.g. AND | OR...
+        fieldAlias*: string ## for SELECT/Read query
+        show*: bool     ## includes or excludes from the SELECT query fields
+        fieldFunction*: ProcedureTypes
 
     InsertIntoType* = object
         tableName*: string
-        fields*: seq[FieldItemType]
+        fields*: seq[InsertIntoFieldType]
 
     GroupType* = object
         fields*: seq[string]
@@ -363,9 +367,26 @@ type
         queryWhereParams*: WhereParamType
 
     ## combined/joined query (read) param-type
+    ## 
+    JoinSelectFieldItemType* = object
+        fieldTable*: string
+        fieldName*: string
+        fieldType*: DataTypes   ## "int", "string", "bool", "boolean", "float",...
+        fieldOrder*: int
+        fieldOp*: OpTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
+        fieldValue*: string  ## for insert/update | start value for range/BETWEEN/NOTBETWEEN and pattern for LIKE operators
+        fieldValueEnd*: string   ## end value for range/BETWEEN/NOTBETWEEN operator
+        fieldValues*: seq[string] ## values for IN/NOTIN operator
+        fieldSubQuery*: QueryParamType ## for WHERE IN (SELECT field from fieldTable)
+        fieldPostOp*: OpTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
+        groupOp*: string     ## e.g. AND | OR...
+        fieldAlias*: string ## for SELECT/Read query
+        show*: bool     ## includes or excludes from the SELECT query fields
+        fieldFunction*: ProcedureTypes
+    
     JoinSelectFieldType* =  object
         tableName*: string
-        tableFields*: seq[FieldItemType]
+        tableFields*: seq[JoinSelectFieldItemType]
     
     JoinFieldType* = object
         tableName*: string
@@ -377,8 +398,24 @@ type
         joinType*: string ## INNER (JOIN), OUTER (LEFT, RIGHT & FULL), SELF...
         joinFields*: seq[JoinFieldType] ## [{tableName: "abc", joinField: "field1" },]
     
+    SelectIntoFieldType* = object
+        fieldTable*: string
+        fieldName*: string
+        fieldType*: DataTypes   ## "int", "string", "bool", "boolean", "float",...
+        fieldOrder*: int
+        fieldOp*: OpTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
+        fieldValue*: string  ## for insert/update | start value for range/BETWEEN/NOTBETWEEN and pattern for LIKE operators
+        fieldValueEnd*: string   ## end value for range/BETWEEN/NOTBETWEEN operator
+        fieldValues*: seq[string] ## values for IN/NOTIN operator
+        fieldSubQuery*: QueryParamType ## for WHERE IN (SELECT field from fieldTable)
+        fieldPostOp*: OpTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
+        groupOp*: string     ## e.g. AND | OR...
+        fieldAlias*: string ## for SELECT/Read query
+        show*: bool     ## includes or excludes from the SELECT query fields
+        fieldFunction*: ProcedureTypes
+
     SelectIntoType* = object
-        selectFields*: seq[FieldItemType] ## @[] => SELECT *
+        selectFields*: seq[SelectIntoFieldType] ## @[] => SELECT *
         intoTable*: string          ## new table/collection
         fromTable*: string          ## old/external table/collection
         fromFilename*: string      ## IN external DB file, e.g. backup.mdb
@@ -417,7 +454,7 @@ type
     
     TaskRecord* = object
         taskRec*: seq[QueryParamType]
-        recCount*: Positive 
+        recCount*: int 
 
     # Exception types
     SaveError* = object of CatchableError
@@ -491,9 +528,9 @@ type
         group*: seq[GroupType] ## @[{fieldName: ""location", fieldOrder: 1}]
         having*: seq[HavingType]
         caseQuery*: seq[CaseQueryType] 
-        skip*: Natural
-        limit*: Positive
-        defaultLimit*: Positive
+        skip*: int
+        limit*: int
+        defaultLimit*: int
         ## Database, audit-log and access parameters 
         ## 
         auditTable*: string

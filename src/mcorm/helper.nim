@@ -60,7 +60,7 @@ proc computeCreateTableScript*(tableName: string; model: ModelType): string =
 proc computeAlterTableScript*(tableName: string; model: ModelType): string =
     result = ""
 
-## computeSyncTableScript: to sync existing table data, for changed table structure
+## TODO: computeSyncTableScript: to sync existing table data, for changed table structure
 ## 
 proc computeSyncTableScript*(tableName: string; model: ModelType): string =
     result = ""
@@ -118,7 +118,7 @@ proc computeSelectByIdScript*(tableName: string; docIds:seq[string]; fields: seq
 ## computeSelectQuery compose SELECT query from the queryParam
 ## queryType => simple, join, cases, subquery, combined etc.
 proc computeSelectQuery*(tableName: string;
-                        queryParam: ReadParamType = ReadParamType();
+                        queryParam: QueryReadParamType = QueryReadParamType();
                         queryType: string = "simple";
                         fields: seq[string] = @[]): string =
     if tableName == "":
@@ -131,7 +131,7 @@ proc computeSelectQuery*(tableName: string;
         var fieldLen = 0                  # number of fields in the SELECT statement/query         
         var unspecifiedGroupItemCount = 0 # variable to determine unspecified fieldName(s) to check if query/script should be returned
 
-        if queryParam == ReadParamType() or queryParam.fields.len() < 1:
+        if queryParam == QueryReadParamType() or queryParam.fields.len() < 1:
             if fields.len > 0:
                 var fieldCount = 0
                 fieldLen = fields.len
@@ -384,7 +384,7 @@ proc computeWhereQuery*(where: seq[WhereParamType]): string =
                     if groupItem.groupOp != "" and groupItemCount < (groupItemsLen - unspecifiedGroupItemCount):
                             fieldQuery = fieldQuery & " " & groupItem.groupOp & " "
                 of OpTypes.IN, OpTypes.INCLUDES:
-                    if groupItem.fieldSubQuery != QueryParamType():
+                    if groupItem.fieldSubQuery != QueryReadParamType():
                         var inValues = "("
                         # include values from SELECT query (e.g. lookup table/collection)
                         let fieldSubQuery = groupItem.fieldSubQuery
@@ -459,7 +459,7 @@ proc computeWhereQuery*(where: seq[WhereParamType]): string =
 
 ## createScript compose insert SQL script
 ## 
-proc computeCreateScript*(tableName: string, actionParams: seq[SaveParamType]): seq[string] = 
+proc computeCreateScript*(tableName: string, actionParams: seq[QuerySaveParamType]): seq[string] = 
     if tableName == "" or actionParams.len < 1 :
         raise newException(CreateQueryError, "Table/collection name and action-params are required for the create operation")
     
@@ -523,7 +523,7 @@ proc computeCreateScript*(tableName: string, actionParams: seq[SaveParamType]): 
 
 ## updateScript compose update SQL script
 ## 
-proc computeUpdateScript*(tableName: string, actionParams: seq[SaveParamType], docIds: seq[string]): seq[string] =
+proc computeUpdateScript*(tableName: string, actionParams: seq[QuerySaveParamType], docIds: seq[string]): seq[string] =
     if docIds.len < 1 or tableName == "" or actionParams.len < 1 :
         raise newException(UpdateQueryError, "Table/collection name, doc-ids and action-params are required for the update operation")
     
