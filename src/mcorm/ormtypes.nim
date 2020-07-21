@@ -96,8 +96,16 @@ type
         CASE,
         UNION,
         JOIN,
+        INNER_JOIN,
+        OUTER_LEFT_JOIN,
+        OUTER_RIGHT_JOIN,
+        OUTER_FULL_JOIN,
+        SELF_JOIN,
         SUB,
         SELECT,
+        SELECT_TOP,
+        SELECT_TABLE_FIELD,
+        SELECT_COLLECTION_DOC,
         SELECT_ONE_TO_ONE,      ## LAZY SELECT: select sourceTable, then getTargetTable() related record{target: {}}
         SELECT_ONE_TO_MANY,     ## LAZY SELECT: select sourceTable, then getTargetTable() related records ..., targets: [{}, {}]
         SELECT_MANY_TO_MANY,    ## LAZY SELECT: select source/targetTable, then getTarget(Source)Table() related records
