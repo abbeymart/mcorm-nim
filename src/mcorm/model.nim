@@ -21,20 +21,22 @@ proc newModel*(appDb: Database;
         modelName: string;
         tableName: string;
         recordDesc: RecordDescType;
-        timeStamp: bool;
-        relations: seq[RelationType];
-        defaults: seq[DefaultValueType];
-        validations: seq[ValidateType];
-        methods: seq[ProcedureType]): ModelType =
+        relations: seq[RelationType] = @[];
+        timeStamp: bool = true;
+        actorStamp: bool = true;
+        activeStamp: bool = true;       
+        methods: seq[ProcedureType] = @[]): ModelType =
     result.appDb = appDb
     result.modelName = modelName
     result.tableName = tableName
     result.recordDesc = recordDesc
     result.timeStamp = timeStamp
+    result.actorStamp = actorStamp
+    result.activeStamp = activeStamp
     result.relations = relations
     result.methods = methods
 
-# CRUD constructor : imported
+# CRUD constructor : import
 
 ## Model methods
 ## 
@@ -168,6 +170,8 @@ proc UserModel(): ModelType =
         tableName = "users",
         recordDesc = recordDesc,
         timeStamp = true,
+        actorStamp = true,
+        activeStamp = true,
         relations = @[],
         methods = methods,
         appDb = appDb,

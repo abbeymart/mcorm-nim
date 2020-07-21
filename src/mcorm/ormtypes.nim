@@ -118,7 +118,7 @@ type
 
     ProcedureType* = object
         procName*: string             # key of the Table containing the custom methods/procs
-        fieldNames*: seq[string]      # to match the custom method/proc args
+        fieldNames*: seq[string]      # proc params, to match the custom proc args
         procReturnType*: DataTypes    # return type of the method/proc
 
     FieldDescType* = object
@@ -151,16 +151,21 @@ type
         MANY_TO_ONE,
         MANY_TO_MANY,
 
+    ## Model/table relationship, from source-to-target
+    ## 
     RelationType* = ref object
         relationType*: RelationTypeTypes   # one-to-one, one-to-many, many-to-one, many-to-many
         sourceField*: string
         targetModel*: string
+        targetTable*: string
         targetField*: string
         foreignKey*: string     # default: sourceModel<sourceField>, e.g. userId
         relationTable*: string # optional tableName for many-to-many | default: sourceTable_targetTable
         onDelete*: RelationOptionTypes
         onUpdate*: RelationOptionTypes
 
+    ## Model definition / description
+    ## 
     ModelType* = ref object
         modelName*: string
         tableName*: string
