@@ -86,8 +86,7 @@ type
         ANY,
         ALL,
 
-    QueryTypes* = enum
-        SELECT,
+    QueryTypes* = enum        
         SAVE,
         INSERT,
         UPDATE,
@@ -98,6 +97,14 @@ type
         UNION,
         JOIN,
         SUB,
+        SELECT,
+        SELECT_ONE_TO_ONE,      ## LAZY SELECT
+        SELECT_ONE_TO_MANY,     
+        SELECT_MANY_TO_MANY,
+        SELECT_INCLUDE_ONE_TO_ONE,  ## EAGER SELECT
+        SELECT_INCLUDE_ONE_TO_MANY,
+        SELECT_INCLUDE_MANY_TO_MANY,
+        
 
     OrderTypes* = enum
         ASC,
