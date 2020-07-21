@@ -47,6 +47,7 @@ type
         PROC,              ## proc(): T
         VALIDATE_PROC,      ## proc(val: T): bool
         DEFAULT_PROC,       ## proc(): T
+        SET_PROC,           ## proc(): T
         UNARY_PROC,         ## proc(val: T): T
         BI_PROC,            ## proc(valA, valB: T): T
         PREDICATE_PROC,     ## proc(val: T): bool
@@ -143,7 +144,8 @@ type
         maxValue*: float
         defaultValue*: proc(): FieldDescType.fieldType  # result: fieldType
         validate*: proc(): bool        # the proc that returns a bool (valid=true/invalid=false)
-        
+        setValue*: proc(): FieldDescType.fieldType # transform fieldValue prior to insert/update task
+
     RecordDescType* = Table[string, FieldDescType ]
     
     RelationOptionTypes* = enum
