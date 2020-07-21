@@ -105,7 +105,6 @@ type
         SELECT_INCLUDE_ONE_TO_MANY,
         SELECT_INCLUDE_MANY_TO_MANY,
         
-
     OrderTypes* = enum
         ASC,
         DESC,
@@ -156,9 +155,9 @@ type
     RelationType* = ref object
         relationType*: RelationTypeTypes   # one-to-one, one-to-many, many-to-one, many-to-many
         sourceField*: string
-        targetTable*: string
+        targetModel*: string
         targetField*: string
-        foreignKey*: string     # default: tableName<sourceField>, e.g. userId
+        foreignKey*: string     # default: sourceModel<sourceField>, e.g. userId
         relationTable*: string # optional tableName for many-to-many | default: sourceTable_targetTable
         onDelete*: RelationOptionTypes
         onUpdate*: RelationOptionTypes
