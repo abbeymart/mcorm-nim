@@ -40,8 +40,8 @@ type
         SEQ,
         TABLE,      ## Table/Map/Dictionary
         MCDB,       ## Database connection handle
-        MODELREC,   ## Model record definition
-        MODELVAL,   ## Model value definition
+        MODEL_RECORD,   ## Model record definition
+        MODEL_VALUE,   ## Model value definition
         
     ProcedureTypes* = enum
         PROC,              ## proc(): T
@@ -71,18 +71,18 @@ type
         NEQ,
         NOTIN,
         BETWEEN,
-        NOTBETWEEN,
+        NOT_BETWEEN,
         INCLUDES,
         LIKE,
-        NOTLIKE,
-        STARTSWITH,
-        ENDSWITH,
+        NOT_LIKE,
+        STARTS_WITH,
+        ENDS_WITH,
         ILIKE,
-        NOTILIKE,
+        NOT_ILIKE,
         REGEX,
-        NOTREGEX,
+        NOT_REGEX,
         IREGEX,
-        NOTIREGEX,
+        NOT_IREGEX,
         ANY,
         ALL,
 
@@ -147,22 +147,29 @@ type
 
     FieldTypes* = Table[string, DataTypes ]
     
-    RelationOptionType* = enum
+    RelationOptionTypes* = enum
         # RESTRICT, CASCADE, NO ACTION, SET DEFAULT and SET NULL
         RESTRICT,
         CASCASDE,
-        NOACTION,
-        SETDEFAULT,
-        SETNULL,
+        NO_ACTION,
+        SET_DEFAULT,
+        SET_NULL,
+
+    RelationTypeTypes* = enum
+        ONE_TO_ONE,
+        ONE_TO_MANY,
+        MANY_TO_ONE,
+        MANY_TO_MANY,
 
     RelationType* = ref object
-        relationType*: string   # one-to-one, one-to-many, many-to-one, many-to-many
+        relationType*: RelationTypeTypes   # one-to-one, one-to-many, many-to-one, many-to-many
         sourceField*: FieldDescType
         targetTable*: string
         targetField*: FieldDescType
+        foreignKey*: string     # different from tableName<sourceField>
         relationTable*: string # optional tableName for many-to-many(default: sourceTable_targetTable)
-        onDelete*: RelationOptionType
-        onUpdate*: RelationOptionType
+        onDelete*: RelationOptionTypes
+        onUpdate*: RelationOptionTypes
 
     ModelType* = ref object
         modelName*: string
