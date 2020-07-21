@@ -139,9 +139,8 @@ type
     RecordDescType* = Table[string, FieldDescType ]
     
     RelationOptionTypes* = enum
-        # RESTRICT, CASCADE, NO ACTION, SET DEFAULT and SET NULL
         RESTRICT,
-        CASCASDE,
+        CASCADE,
         NO_ACTION,
         SET_DEFAULT,
         SET_NULL,
@@ -196,9 +195,9 @@ type
 
     SaveFieldType* = object
         fieldName*: string
-        fieldType*: DataTypes
         fieldValue*: string
         fieldOrder*: Positive
+        fieldType*: DataTypes
         fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
 
     CreateFieldType* = object
@@ -212,11 +211,13 @@ type
         fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
 
     ReadFieldType* = object
+        tableName*: string
         fieldName*: string
         fieldOrder*: Positive
         fieldAlias*: string
         show*: bool     ## includes or excludes from the SELECT query fields
         fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
+        fieldSubQuery*: QueryParamType ## for WHERE IN (SELECT field from fieldTable)
 
     DeleteFieldType* = object
         fieldName*: string
@@ -251,7 +252,7 @@ type
     SaveParamType* = object
         tableName*: string
         fields*: seq[SaveFieldType]
-        where*: seq[WhereFieldType]
+        where*: seq[WhereParamType]
     
     CreateParamType* = object
         tableName*: string
@@ -260,7 +261,7 @@ type
     UpdateParamType* = object
         tableName*: string
         fields*: seq[UpdateFieldType]
-        where*: seq[WhereFieldType]
+        where*: seq[WhereParamType]
     
     ReadParamType* = object
         tableName*: string
@@ -270,21 +271,36 @@ type
     DeleteParamType* = object
         tableName*: string
         fields*: seq[DeleteFieldType]
-        where*: seq[WhereFieldType]
+        where*: seq[WhereParamType]
         
-    ## queryProc type for function with one or more fields / arguments
-    ## functionType => MIN(min), MAX, SUM, AVE, COUNT, CUSTOM/USER defined
     ## fields=> specify fields/parameters to match the arguments for the functionType.
     ## The field item type must match the argument types expected by the functionType, 
     ## otherwise the only the first function-matching field will be used, as applicable
-    # QueryProc* = object
-    #     functionType*: ProcedureTypes
-    #     fields*: seq[FieldItemType]
         
     QueryParamType* = object        # TODO: Generic => make specific to CRUD operations
         tableName*: string    ## default: "" => will use instance tableName instead
-        fields*: seq[FieldItemType]   ## @[] => SELECT * (all fields)
+        fields*: seq[ReadFieldType]   ## @[] => SELECT * (all fields)
         where*: seq[WhereParamType] ## whereParams or docId(s)  will be required for delete task
+
+    QueryReadParamType* = object
+        tableName*: string
+        fields*: seq[ReadFieldType]
+        where*: seq[WhereParamType]
+
+    QuerySaveParamType* = object
+        tableName*: string
+        fields*: seq[SaveFieldType]
+        where*: seq[WhereParamType]
+
+    QueryUpdateParamType* = object
+        tableName*: string
+        fields*: seq[UpdateFieldType]
+        where*: seq[WhereParamType]
+
+    QueryDeleteParamType* = object
+        tableName*: string
+        fields*: seq[DeleteFieldType]
+        where*: seq[WhereParamType]
 
     ## For SELECT TOP... query
     QueryTopType* = object         

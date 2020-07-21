@@ -50,12 +50,12 @@ proc strToTime*(val: string): Time =
         return getTime()
 
 
-## computeCreateTableScript
+## TODO: computeCreateTableScript
 ## 
 proc computeCreateTableScript*(tableName: string; model: ModelType): string =
     result = ""
 
-## computeAlterTableScript: alter script for an existing table with different structure
+## TODO: computeAlterTableScript: alter script for an existing table with different structure
 ## 
 proc computeAlterTableScript*(tableName: string; model: ModelType): string =
     result = ""
@@ -118,7 +118,7 @@ proc computeSelectByIdScript*(tableName: string; docIds:seq[string]; fields: seq
 ## computeSelectQuery compose SELECT query from the queryParam
 ## queryType => simple, join, cases, subquery, combined etc.
 proc computeSelectQuery*(tableName: string;
-                        queryParam: QueryParamType = QueryParamType();
+                        queryParam: ReadParamType = ReadParamType();
                         queryType: string = "simple";
                         fields: seq[string] = @[]): string =
     if tableName == "":
@@ -127,11 +127,11 @@ proc computeSelectQuery*(tableName: string;
     try:
         # script, sorting, valid group item count variables
         var selectQuery = ""
-        var sortedFields: seq[FieldItemType] = @[]
+        var sortedFields: seq[ReadFieldType] = @[]
         var fieldLen = 0                  # number of fields in the SELECT statement/query         
         var unspecifiedGroupItemCount = 0 # variable to determine unspecified fieldName(s) to check if query/script should be returned
 
-        if queryParam == QueryParamType() or queryParam.fields.len() < 1:
+        if queryParam == ReadParamType() or queryParam.fields.len() < 1:
             if fields.len > 0:
                 var fieldCount = 0
                 fieldLen = fields.len
@@ -186,9 +186,9 @@ proc computeSelectQuery*(tableName: string;
                     inc unspecifiedGroupItemCount
                     continue
                 inc fieldCount      # count valid field  
-                if fieldItem.fieldTable != "":
+                if fieldItem.tableName != "":
                     selectQuery.add(" ")
-                    selectQuery.add(fieldItem.fieldTable)
+                    selectQuery.add(fieldItem.tableName)
                     selectQuery.add(".")
                     selectQuery.add(fieldItem.fieldName)
                     if fieldLen > 1 and fieldCount < (fieldLen - unspecifiedGroupItemCount):
@@ -275,8 +275,6 @@ proc computeWhereQuery*(where: seq[WhereParamType]): string =
                 var fieldname = groupItem.fieldName
                 if groupItem.fieldTable != "":
                     fieldname = groupItem.fieldTable & "." & groupItem.fieldName
-
-                var groupItemGroupOp = ""
 
                 case groupItem.fieldOp:
                 of OpTypes.EQ:
@@ -525,7 +523,7 @@ proc computeCreateScript*(tableName: string, actionParams: seq[SaveParamType]): 
 
 ## updateScript compose update SQL script
 ## 
-proc computeUpdateScript*(tableName: string, actionParams: seq[QueryParamType], docIds: seq[string]): seq[string] =
+proc computeUpdateScript*(tableName: string, actionParams: seq[SaveParamType], docIds: seq[string]): seq[string] =
     if docIds.len < 1 or tableName == "" or actionParams.len < 1 :
         raise newException(UpdateQueryError, "Table/collection name, doc-ids and action-params are required for the update operation")
     
