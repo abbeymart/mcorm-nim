@@ -217,12 +217,16 @@ type
         fieldAlias*: string
         show*: bool     ## includes or excludes from the SELECT query fields
         fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
-        fieldSubQuery*: QueryParamType ## for WHERE IN (SELECT field from fieldTable)
 
     DeleteFieldType* = object
         fieldName*: string
         fieldSubQuery*: QueryParamType
         fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
+
+    FieldSubQueryType* = object
+        tableName*: string    ## default: "" => will use instance tableName instead
+        fields*: seq[ReadFieldType]   ## @[] => SELECT * (all fields)
+        where*: seq[WhereParamType]
 
     GroupFunctionType* = object
         fields*: seq[string]
@@ -237,7 +241,7 @@ type
         fieldValue*: string  ## for insert/update | start value for range/BETWEEN/NOTBETWEEN and pattern for LIKE operators
         fieldValueEnd*: string   ## end value for range/BETWEEN/NOTBETWEEN operator
         fieldValues*: seq[string] ## values for IN/NOTIN operator
-        fieldSubQuery*: QueryParamType ## for WHERE IN (SELECT field from fieldTable)
+        fieldSubQuery*: FieldSubQueryType ## for WHERE IN (SELECT field from fieldTable)
         fieldPostOp*: OpTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
         groupOp*: string     ## e.g. AND | OR...
         fieldProc*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
