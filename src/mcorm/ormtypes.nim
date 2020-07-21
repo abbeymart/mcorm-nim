@@ -7,7 +7,7 @@
 #                   ORM Package Types
 
 ## ORM types | centralised and exported types for all ORM operations:
-## SQL-DDL (CREATE...), SQL-CRUD (INSERT, SELECT, UPDATE, DELETE...) operations
+## SQL-DDL (CREATE...), SQL-DML/CRUD(INSERT, SELECT, UPDATE, DELETE...) operations
 ## 
 import json, db_postgres, tables, times
 import mcdb, mctranslog
@@ -45,18 +45,18 @@ type
         
     ProcedureTypes* = enum
         PROC,              ## proc(): T
-        VALIDATEPROC,      ## proc(val: T): bool
-        DEFAULTPROC,       ## proc(): T
-        UNARYPROC,         ## proc(val: T): T
-        BIPROC,            ## proc(valA, valB: T): T
-        PREDICATEPROC,     ## proc(val: T): bool
-        BIPREDICATEPROC,   ## proc(valA, valB: T): bool
-        SUPPLYPROC,        ## proc(): T
-        BISUPPLYPROC,      ## proc(): (T, T)
-        CONSUMERPROC,      ## proc(val: T): void
-        BICONSUMERPROC,    ## proc(valA, valB: T): void
-        COMPARATORPROC,    ## proc(valA, valB: T): int
-        MODELPROC,         ## proc(): Model  | to define new data model
+        VALIDATE_PROC,      ## proc(val: T): bool
+        DEFAULT_PROC,       ## proc(): T
+        UNARY_PROC,         ## proc(val: T): T
+        BI_PROC,            ## proc(valA, valB: T): T
+        PREDICATE_PROC,     ## proc(val: T): bool
+        BI_PREDICATE_PROC,   ## proc(valA, valB: T): bool
+        SUPPLY_PROC,        ## proc(): T
+        BI_SUPPLY_PROC,      ## proc(): (T, T)
+        CONSUMER_PROC,      ## proc(val: T): void
+        BI_CONSUMER_PROC,    ## proc(valA, valB: T): void
+        COMPARATOR_PROC,    ## proc(valA, valB: T): int
+        MODEL_PROC,         ## proc(): Model  | to define new data model
 
     OpTypes* = enum
         AND,
@@ -67,9 +67,9 @@ type
         GTE,
         LT,
         LTE,
-        IN,
         NEQ,
-        NOTIN,
+        IN,
+        NOT_IN,
         BETWEEN,
         NOT_BETWEEN,
         INCLUDES,
@@ -92,8 +92,8 @@ type
         INSERT,
         UPDATE,
         DELETE,
-        INSERTINTO,
-        SELECTFROM,
+        INSERT_INTO,
+        SELECT_FROM,
         CASE,
         UNION,
         JOIN,
@@ -109,19 +109,6 @@ type
     UpdatedByType* = uuId
     CreatedAtType* = DateTime
     UpdatedAtType* = DateTime
-    
-    DefaultProcedureType*[R] = proc(): R {.closure.}
-    MethodProcedureType*[T, R] = proc(rec: T): R {.closure.}
-    ValidateProcedureType*[T] = proc(rec: T): bool {.closure.}
-    SupplierProceduceType*[R] = proc(): R {.closure.}
-
-    DefaultValueType* = object
-        fieldName*: string
-        defaultProc*: proc(): DataTypes
-    
-    ValidateType* = object
-        fieldName*: string
-        validateProc*: proc(): bool
 
     ProcedureType* = object
         procName*: string             # key of the Table containing the custom methods/procs
@@ -144,8 +131,6 @@ type
         validate*: proc(): bool        # the proc that returns a bool (valid=true/invalid=false)
         
     RecordDescType* = Table[string, FieldDescType ]
-
-    FieldTypes* = Table[string, DataTypes ]
     
     RelationOptionTypes* = enum
         # RESTRICT, CASCADE, NO ACTION, SET DEFAULT and SET NULL
@@ -163,11 +148,11 @@ type
 
     RelationType* = ref object
         relationType*: RelationTypeTypes   # one-to-one, one-to-many, many-to-one, many-to-many
-        sourceField*: FieldDescType
+        sourceField*: string
         targetTable*: string
-        targetField*: FieldDescType
-        foreignKey*: string     # different from tableName<sourceField>
-        relationTable*: string # optional tableName for many-to-many(default: sourceTable_targetTable)
+        targetField*: string
+        foreignKey*: string     # default: tableName<sourceField>, e.g. userId
+        relationTable*: string # optional tableName for many-to-many | default: sourceTable_targetTable
         onDelete*: RelationOptionTypes
         onUpdate*: RelationOptionTypes
 
@@ -175,21 +160,11 @@ type
         modelName*: string
         tableName*: string
         recordDesc*: RecordDescType
-        timeStamp*: bool
+        timeStamp*: bool            ## auto-add: createdAt and updatedAt
+        actorStampt*: bool          ## auto-add: createdBy and updatedBy
         relations*: seq[RelationType]
-        methods*: seq[ProcedureType]
-        appDb*: Database
-
-    ## User/client information to be provided after successful login
-    ## 
-    UserParamType* = object
-        id*: string         # stored as uuid in the DB
-        firstName*: string
-        lastName*: string
-        lang*: string
-        loginName*: string
-        email*: string
-        token*: string
+        methods*: seq[ProcedureType]    ## model-level procs, e.g fullName(a, b: T): T
+        appDb*: Database            ## Db handle
 
     # fieldValue(s) are string type for params parsing convenience,
     # fieldValue(s) will be cast by supported fieldType(s), else will through ValueError exception
@@ -431,6 +406,17 @@ type
     UpdateQueryError* = object of CatchableError
     DeleteQueryError* = object of CatchableError
 
+    
+    ## User/client information to be provided after successful login
+    ## 
+    UserParamType* = object
+        id*: string         # stored as uuid in the DB
+        firstName*: string
+        lastName*: string
+        lang*: string
+        loginName*: string
+        email*: string
+        token*: string
 
     ## Shared CRUD Operation Types  
     CrudParamType* = ref object
