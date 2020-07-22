@@ -44,7 +44,11 @@ proc uuidValidate*(): bool =
 proc hashPassword*(): string = 
     result = "HASHED-PASSWORD"
 
-proc UserModel(): ModelType =
+# Placeholder for Group mode (table: groups)
+proc GroupModel(): ModelType =
+    return nil
+
+proc UserModel*(): ModelType =
     # Table structure / model definitions
     var recordDesc = initTable[string, FieldDescType]()
     
@@ -58,7 +62,6 @@ proc UserModel(): ModelType =
         unique: true,
         indexable: true,
         primaryKey: true,
-        foreignKey: true,
         defaultValue: uuidDefault,
         validate: uuidValidate
         # minValue*: float
@@ -67,7 +70,7 @@ proc UserModel(): ModelType =
 
     recordDesc["firstName"] = FieldDescType(
         fieldType: DataTypes.STRING,
-        fieldLength: 255,
+        fieldLength: 255,           # default length for STRING (255)
         fieldPattern: "[a-zA-Z]",
         fieldFormat: "XXXXXXXXXX",
         notNull: true,
@@ -98,11 +101,37 @@ proc UserModel(): ModelType =
         setValue: hashPassword
     )
 
-    # model methods/procs | initialize and/or define
+    recordDesc["isActive"] = FieldDescType(
+        fieldType: DataTypes.BOOLEAN,
+        notNull: true,
+        defaultValue: proc(): string = "true"
+    )
+
+    recordDesc["desc"] = FieldDescType(
+        fieldType: DataTypes.TEXT,
+        fieldPattern: "[a-zA-Z0-9_-*|]",
+        notNull: false,
+    )
+
+    # relations
+    var modelRelations: seq[RelationType] = @[]
+    
+    modelRelations.add(RelationType(
+        relationType: RelationTypeTypes.ONE_TO_MANY,
+        targetField: "id",      # default: primary key/"id" field, it could be another unique key
+        targetModel: GroupModel(),  # returns ModelType for groups table
+        targetTable: "groups",
+        foreignKey: "userId",   # default: sourceModel<sourceField>, e.g. userId
+        relationTable: "",      # optional tableName for many-to-many | default: sourceTable_targetTable
+        onDelete: RelationOptionTypes.SET_NULL,
+        onUpdate: RelationOptionTypes.CASCADE,
+    ))
+
+    # model methods/procs
     let methods = @[
         ProcedureType(
             procName: fullName,
-            fieldNames: @["firstName", "lastName", "middleName"],
+            procParams: @["firstName", "lastName", "middleName"],
             procReturnType: DataTypes.STRING
         ),
         ProcedureType(
@@ -111,19 +140,20 @@ proc UserModel(): ModelType =
         )
     ]
 
-    # extend / instantiate model
+    # extend/instantiate the user-model, using newModel constructor proc
     result = newModel(
         modelName = "User",
         tableName = "users",
         recordDesc = recordDesc,
-        timeStamp = true,
-        actorStamp = true,
-        activeStamp = true,
-        relations = @[],
+        timeStamp = true,       # default: true | auto-add: createdAt and updatedAt
+        actorStamp = true,      # default: true | auto-add: createdBy(uuid/string) and updatedBy(uuid/string)
+        activeStamp = true,     # default: true | auto-add: isActive(bool, default: true)
+        relations = modelRelations,
         methods = methods,
         appDb = Database(),     # TBD
     )
 
+# create an instance of the UserModel
 var userMod = UserModel()
 echo "user-model: ", userMod.repr, " \n\n"
 var userTable = userMod.createTable()

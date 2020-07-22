@@ -127,9 +127,9 @@ type
     UpdatedAtType* = DateTime
 
     ProcedureType* = object
-        procName*: proc(): string    # proc/method definition
-        fieldNames*: seq[string]      # proc params, to match the custom proc args
-        procReturnType*: DataTypes    # return type of the method/proc
+        procName*: proc(): string   # proc/method definition
+        procParams*: seq[string]    # proc params/fieldNames, to be injected into procName, used to get the fieldValue
+        procReturnType*: DataTypes  # proc return type
 
     FieldDescType* = object
         fieldType*: DataTypes
@@ -140,7 +140,6 @@ type
         unique*: bool
         indexable*: bool
         primaryKey*: bool
-        foreignKey*: bool
         minValue*: float
         maxValue*: float
         defaultValue*: proc(): string  # result: cast string-result to fieldType
@@ -150,11 +149,11 @@ type
     RecordDescType* = Table[string, FieldDescType ]
     
     RelationOptionTypes* = enum
-        RESTRICT,
-        CASCADE,
-        NO_ACTION,
-        SET_DEFAULT,
-        SET_NULL,
+        RESTRICT,       ## must remove target-record(s), prior to removing source-record
+        CASCADE,        ## default for ONUPDATE | update foreignKey value or delete foreignKey record/value
+        NO_ACTION,      ## leave the foreignKey value, as-is
+        SET_DEFAULT,    ## set foreignKey to specified default value
+        SET_NULL,       ## default for ONDELETE | allow/set foreignKey to be null
 
     RelationTypeTypes* = enum
         ONE_TO_ONE,
@@ -166,10 +165,9 @@ type
     ## 
     RelationType* = ref object
         relationType*: RelationTypeTypes   # one-to-one, one-to-many, many-to-one, many-to-many
-        sourceField*: string
-        targetModel*: string
+        targetField*: string    # default: primary key/"id" field, it could be another unique key
+        targetModel*: ModelType
         targetTable*: string
-        targetField*: string
         foreignKey*: string     # default: sourceModel<sourceField>, e.g. userId
         relationTable*: string # optional tableName for many-to-many | default: sourceTable_targetTable
         onDelete*: RelationOptionTypes
@@ -180,7 +178,7 @@ type
     ModelType* = ref object
         modelName*: string
         tableName*: string
-        recordDesc*: RecordDescType
+        recordDesc*: Table[string, FieldDescType]
         timeStamp*: bool            ## auto-add: createdAt and updatedAt
         actorStamp*: bool           ## auto-add: createdBy and updatedBy
         activeStamp*: bool          ## record active status, isActive (true | false)

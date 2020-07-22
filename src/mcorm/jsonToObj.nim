@@ -1,4 +1,7 @@
 import json
+import ormtypes
+import ormExample
+import tables
 
 # JSON request object
 var jsonText = """
@@ -13,7 +16,7 @@ var jsonText = """
     "profile": {"isAdmin": true, "group": "admin", "groups": ["admin", "guest"], "lang": "en-US", "dob": "2020-01-10" }
     }
 """
-
+# data coming from the client in json-format
 var jNode: JsonNode = parseJson(jsonText)
 
 type 
@@ -58,3 +61,101 @@ echo "json-to-object: ", jsonToObj
 
 echo "user-name: ", jsonToObj.username
 echo "profile: ", jsonToObj.profile
+
+# Convert jsonToObj to QuerySaveParamType | QueryReadParamType | QueryDeleteParamType
+
+var 
+    saveFields: seq[SaveFieldType] = @[]
+    saveWhere: seq[WhereParamType] = @[]
+
+#  compose CRUD meta-data by types
+for name, val in jsonToObj.fieldPairs:
+    var valType = typed(val)
+    when valType is string:
+        saveFields.add(
+            SaveFieldType(
+                fieldName: name,
+                fieldValue: val,
+                fieldType: DataTypes.STRING
+                )    
+            )
+    when valType is bool:
+        proc boolVal(): string =
+            if val == true:
+                "true"
+            else:
+                "false"
+         
+        saveFields.add(
+            SaveFieldType(
+                fieldName: name,
+                fieldValue: boolVal(),
+                fieldType: DataTypes.BOOL
+                )    
+            )
+    when valType is Profile:
+        saveFields.add(
+            SaveFieldType(
+                fieldName: name,
+                fieldValue: getStr(%*(val)),
+                fieldType: DataTypes.JSON
+                )    
+            )
+                   
+# TODO: compose CRUD meta-data based on JSON data request and defined model => move to helper function
+# instantiate the model
+var userMod = UserModel()
+
+for fieldName, fieldDesc in userMod.recordDesc.pairs():
+    # errorChecking
+    var errorMessage = ""
+    var validField: bool = false
+
+    # check the key type from userModel
+    var fieldType = fieldDesc.fieldType
+    var fieldValue: string
+    
+    # check the jNode for key info, validate and set value or capture exception/value-error
+    case fieldType
+    of DataTypes.STRING:
+        fieldValue = jNode{fieldName}.getStr("")
+        # TODO: validate fieldValue
+    of DataTypes.BOOL, DataTypes.BOOLEAN:
+        let jValue = jNode{fieldName}.getBool(false)
+        if jValue:
+            fieldValue = "true"
+        else:
+            fieldValue = "false"
+    of DataTypes.INT:
+        let jValue = jNode{fieldName}.getInt(0)
+    else:
+        echo "perform all other cases or return value-error/unsupported-type exception"
+    # TODO: add other cases for all DataTypes
+
+
+
+var querySaveParam = QuerySaveParamType(
+    tableName: "users",
+    fields: saveFields,
+    where: saveWhere,
+)
+
+    # QueryReadParamType* = object
+    #     tableName*: string
+    #     fields*: seq[ReadFieldType]
+    #     where*: seq[WhereParamType]
+
+    # QuerySaveParamType* = object
+    #     tableName*: string
+    #     fields*: seq[SaveFieldType]
+    #     where*: seq[WhereParamType]
+
+    # QueryUpdateParamType* = object
+    #     tableName*: string
+    #     fields*: seq[UpdateFieldType]
+    #     where*: seq[WhereParamType]
+
+    # QueryDeleteParamType* = object
+    #     tableName*: string
+    #     fields*: seq[DeleteFieldType]
+    #     where*: seq[WhereParamType]
