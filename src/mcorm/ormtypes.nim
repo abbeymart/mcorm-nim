@@ -48,6 +48,7 @@ type
         VALIDATE_PROC,      ## proc(val: T): bool
         DEFAULT_PROC,       ## proc(): T
         SET_PROC,           ## proc(): T
+        GET_PROC,           ## proc(): T
         UNARY_PROC,         ## proc(val: T): T
         BI_PROC,            ## proc(valA, valB: T): T
         PREDICATE_PROC,     ## proc(val: T): bool
