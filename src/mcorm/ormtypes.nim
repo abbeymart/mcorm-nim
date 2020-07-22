@@ -145,7 +145,7 @@ type
         maxValue*: float
         defaultValue*: proc(): string  # result: cast string-result to fieldType
         validate*: proc(): bool        # the proc that returns a bool (valid=true/invalid=false)
-        setValue*: proc(): FieldDescType.fieldType # transform fieldValue prior to insert/update task
+        setValue*: proc(): string # transform fieldValue prior to insert/update | cast string-result to fieldType
 
     RecordDescType* = Table[string, FieldDescType ]
     

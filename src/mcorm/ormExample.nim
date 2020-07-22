@@ -35,21 +35,16 @@ var userMethods: Table[string, proc(): string]
 # userMethods["getCurrentDateTime"] = getCurrentDateTime
 userMethods["fullName"] = fullName
 
-proc UUIDDefault*(): string =
+proc uuidDefault*(): string =
     result = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 
-proc UUIDValidate*(): bool = 
+proc uuidValidate*(): bool = 
     result = true
 
-proc UserModel(): ModelType =
-    var appDb = Database()     # TBD
-    var userModel = ModelType()
+proc hashPassword*(): string = 
+    result = "HASHED-PASSWORD"
 
-    let 
-        modelName = "Users"
-        tableName = "users"
-        timeStamp = true
-    
+proc UserModel(): ModelType =
     # Table structure / model definitions
     var recordDesc = initTable[string, FieldDescType]()
     
@@ -64,8 +59,8 @@ proc UserModel(): ModelType =
         indexable: true,
         primaryKey: true,
         foreignKey: true,
-        defaultValue: proc(): string = "AAAAAAAAAA-BBB-CCCC",
-        validate: UUIDValidate
+        defaultValue: uuidDefault,
+        validate: uuidValidate
         # minValue*: float
         # maxValue*: float
     )
@@ -76,6 +71,31 @@ proc UserModel(): ModelType =
         fieldPattern: "[a-zA-Z]",
         fieldFormat: "XXXXXXXXXX",
         notNull: true,
+    )
+
+    recordDesc["lastName"] = FieldDescType(
+        fieldType: DataTypes.STRING,
+        fieldLength: 255,
+        fieldPattern: "[a-zA-Z]",
+        fieldFormat: "XXXXXXXXXX",
+        notNull: true,
+    )
+
+    recordDesc["username"] = FieldDescType(
+        fieldType: DataTypes.STRING,
+        fieldLength: 255,
+        fieldPattern: "[a-zA-Z]",
+        fieldFormat: "XXXXXXXXXX",
+        notNull: true,
+    )
+
+    recordDesc["password"] = FieldDescType(
+        fieldType: DataTypes.STRING,
+        fieldLength: 255,
+        fieldPattern: "[a-zA-Z]",
+        fieldFormat: "XXXXXXXXXX",
+        notNull: true,
+        setValue: hashPassword
     )
 
     # model methods/procs | initialize and/or define
@@ -101,7 +121,7 @@ proc UserModel(): ModelType =
         activeStamp = true,
         relations = @[],
         methods = methods,
-        appDb = appDb,
+        appDb = Database(),     # TBD
     )
 
 var userMod = UserModel()
