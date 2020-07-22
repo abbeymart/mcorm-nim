@@ -16,6 +16,7 @@ import crud
 
 proc fullName*(): string =
     # params obtained from the model-instance-values (e.g. user.firstName)
+    # auto-inject fieldName (args/params) from model-instance values
     let 
         firstName = ""
         middleName = ""
@@ -26,14 +27,13 @@ proc fullName*(): string =
             else:
                  firstName & " " & lastName
 
-proc getCurrentDateTime*(): DateTime =
-    result = now().utc
+proc getCurrentDateTime*(): string =
+    result = (now().utc).getDateStr
 
 # Define model procedures
-# var userMethods = initTable[string, proc(): auto]()
-var userMethods: Table[string, proc(): string]
+# var userMethods: Table[string, proc(): string]
 # userMethods["getCurrentDateTime"] = getCurrentDateTime
-userMethods["fullName"] = fullName
+# userMethods["fullName"] = fullName
 
 proc uuidDefault*(): string =
     result = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
@@ -101,12 +101,12 @@ proc UserModel(): ModelType =
     # model methods/procs | initialize and/or define
     let methods = @[
         ProcedureType(
-            procName: "fullName",
+            procName: fullName,
             fieldNames: @["firstName", "lastName", "middleName"],
             procReturnType: DataTypes.STRING
         ),
         ProcedureType(
-            procName: "getCurrentDateTime",
+            procName: getCurrentDateTime,
             procReturnType: DataTypes.DATETIME
         )
     ]

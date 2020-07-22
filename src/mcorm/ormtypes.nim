@@ -127,7 +127,7 @@ type
     UpdatedAtType* = DateTime
 
     ProcedureType* = object
-        procName*: string             # key of the Table containing the custom methods/procs
+        procName*: proc(): string    # proc/method definition
         fieldNames*: seq[string]      # proc params, to match the custom proc args
         procReturnType*: DataTypes    # return type of the method/proc
 

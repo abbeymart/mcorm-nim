@@ -5,14 +5,14 @@
 #    See the file "LICENSE.md", included in this
 #    distribution, for details about the copyright / license.
 # 
-#             mConnect Model Definition Types
+#             mConnect Model Definition and DDL Operations
 #
 
-## mConnect Model Definition Types:
-## 
+## mConnect Model Definition: constructor/procedure for defining new model
+## DDL Operations: create/alter/drop table/index/view..., sync data...
 
 # types
-import tables
+# import tables
 import ormtypes, mcresponse, mcdb, helpers/helper
 import crud
 
@@ -38,28 +38,34 @@ proc newModel*(appDb: Database;
     result.methods = methods
 
 ## Model methods
-## modelTable method for creating, altering, sync data (if exist)...
+## modelTable methods/procs to create/alter/drop table/index/view..., sync data...
 ## 
 proc createTable*(model: ModelType): ResponseMessage = 
     result = getResMessage("success", ResponseMessage())
 
-# => part of the CRUD methods
-## getRecords: read all records with or without condition(s), with skip and limit props
-## Mainly for lookup tables, which require no access / permission => consolidate with getRecord(?)
-## 
-proc getRecords*(crud: CrudParamType): void = 
-    echo "get records"
+proc alterTable*(model: ModelType): ResponseMessage = 
+    result = getResMessage("success", ResponseMessage())
 
-## getRecord: read records read all records with or without condition(s), with skip and limit props
-## Require access / permission
-proc getRecord*(crud: CrudParamType): void = 
-    echo "get record(s)"
+proc dropTable*(model: ModelType): ResponseMessage = 
+    result = getResMessage("success", ResponseMessage())
 
-## saveRecord: create or update record(s) by access / permission (roles)
-## 
-proc saveRecord*(crud: CrudParamType): void = 
-    echo "save record(s)"
+proc createIndex*(model: ModelType): ResponseMessage = 
+    result = getResMessage("success", ResponseMessage())
 
-## deleteRecord
-proc deleteRecord*(crud: CrudParamType): void = 
-    echo "delete record"
+proc dropIndex*(model: ModelType): ResponseMessage = 
+    result = getResMessage("success", ResponseMessage())
+
+proc alterIndex*(model: ModelType): ResponseMessage = 
+    result = getResMessage("success", ResponseMessage())
+
+proc createView*(model: ModelType): ResponseMessage = 
+    result = getResMessage("success", ResponseMessage())
+
+proc alterView*(model: ModelType): ResponseMessage = 
+    result = getResMessage("success", ResponseMessage())
+
+proc dropView*(model: ModelType): ResponseMessage = 
+    result = getResMessage("success", ResponseMessage())
+
+proc syncData*(model: ModelType): ResponseMessage = 
+    result = getResMessage("success", ResponseMessage())
