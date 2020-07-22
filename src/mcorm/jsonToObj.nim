@@ -101,44 +101,7 @@ for name, val in jsonToObj.fieldPairs:
                 fieldType: DataTypes.JSON
                 )    
             )
-                   
-# TODO: compose CRUD meta-data based on JSON data request and defined model => move to helper function
-# instantiate the model
-var userMod = UserModel()
 
-for fieldName, fieldDesc in userMod.recordDesc.pairs():
-    # errorChecking
-    var errorMessage = ""
-    var validField: bool = false
-
-    # check the key type from userModel
-    var fieldType = fieldDesc.fieldType
-    var fieldValue: string
-    
-    # check the jNode for key info, validate and set value or capture exception/value-error
-    case fieldType
-    of DataTypes.STRING:
-        fieldValue = jNode{fieldName}.getStr("")
-        # TODO: validate fieldValue
-    of DataTypes.BOOL, DataTypes.BOOLEAN:
-        let jValue = jNode{fieldName}.getBool(false)
-        if jValue:
-            fieldValue = "true"
-        else:
-            fieldValue = "false"
-    of DataTypes.INT:
-        let jValue = jNode{fieldName}.getInt(0)
-    else:
-        echo "perform all other cases or return value-error/unsupported-type exception"
-    # TODO: add other cases for all DataTypes
-
-
-
-var querySaveParam = QuerySaveParamType(
-    tableName: "users",
-    fields: saveFields,
-    where: saveWhere,
-)
 
     # QueryReadParamType* = object
     #     tableName*: string
