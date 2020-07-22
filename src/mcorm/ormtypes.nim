@@ -143,7 +143,7 @@ type
         foreignKey*: bool
         minValue*: float
         maxValue*: float
-        defaultValue*: proc(): FieldDescType.fieldType  # result: fieldType
+        defaultValue*: proc(): string  # result: cast string-result to fieldType
         validate*: proc(): bool        # the proc that returns a bool (valid=true/invalid=false)
         setValue*: proc(): FieldDescType.fieldType # transform fieldValue prior to insert/update task
 
