@@ -114,7 +114,13 @@ type
         SELECT_INCLUDE_ONE_TO_ONE,  ## EAGER SELECT: select sourceTable and getTargetTable related record {..., target: {}}
         SELECT_INCLUDE_ONE_TO_MANY, ## EAGER SELECT: select sourceTable and getTargetTable related records { , []}
         SELECT_INCLUDE_MANY_TO_MANY, ## EAGER SELECT: select sourceTable and getTargetTable related record {{}}
-        
+
+    QueryWhereTypes* = enum
+        ID,
+        PARAMS,
+        QUERY,
+        SUBQUERY,
+
     OrderTypes* = enum
         ASC,
         DESC,
@@ -236,7 +242,7 @@ type
         fieldValue*: string  ## for insert/update | start value for range/BETWEEN/NOTBETWEEN and pattern for LIKE operators
         fieldValueEnd*: string   ## end value for range/BETWEEN/NOTBETWEEN operator
         fieldValues*: seq[string] ## values for IN/NOTIN operator
-        fieldSubQuery*: QueryReadParamType ## for WHERE IN (SELECT field from fieldTable)
+        fieldSubQuery*: QueryParamType ## for WHERE IN (SELECT field from fieldTable)
         fieldPostOp*: OpTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
         groupOp*: string     ## e.g. AND | OR...
         fieldProc*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...

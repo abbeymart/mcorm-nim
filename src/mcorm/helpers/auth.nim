@@ -122,7 +122,7 @@ proc checkAccess*(
         return getResMessage("notFound", ResponseMessage(value: nil, message: getCurrentExceptionMsg()))
 
 ## getCurrentRecord returns the current records for the CRUD task
-proc getCurrentRecord*(appDb: Database; tableName: string; queryParams: QueryReadParamType; whereParams: seq[WhereParamType]): ResponseMessage =
+proc getCurrentRecord*(appDb: Database; tableName: string; queryParams: QueryParamType; whereParams: seq[WhereParamType]): ResponseMessage =
     try:
         # compose query statement based on the whereParams
         var selectQuery = computeSelectQuery(tableName, queryParams)

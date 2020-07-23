@@ -54,7 +54,7 @@ proc getAllRecords*(crud: CrudParamType; fields: seq[string] = @[]): ResponseMes
         const okRes = OkayResponse(ok: false)
         return getResMessage("saveError", ResponseMessage(value: %*(okRes), message: getCurrentExceptionMsg()))
 
-proc getRecord*(crud: CrudParamType; by: string;
+proc getRecord*(crud: CrudParamType; by: QueryWhereTypes;
                 docIds: seq[string] = @[];
                 where: seq[WhereParamType] = @[];
                 fields: seq[string] = @[]): ResponseMessage =  
@@ -66,10 +66,10 @@ proc getRecord*(crud: CrudParamType; by: string;
             crud.where = where
 
         # validate required inputs by action-type
-        if by == "id" and crud.docIds.len < 1:
+        if by == QueryWhereTypes.ID and crud.docIds.len < 1:
             # return error message
             return getResMessage("paramsError", ResponseMessage(value: nil, message: "Delete condition by id (docIds[]) is required"))
-        elif (by == "params" or by == "query") and where.len < 1:
+        elif (by == QueryWhereTypes.PARAMS or by == QueryWhereTypes.QUERY) and where.len < 1:
             return getResMessage("paramsError", ResponseMessage(value: nil, message: "Delete condition by params (whereParams) is required"))
         
         # check query params, skip and limit(records to return maximum 100,000 or as set by service consumer)
@@ -86,7 +86,7 @@ proc getRecord*(crud: CrudParamType; by: string;
         
         # Perform query by: id, params, open (all permitted record - by admin, owner or role assignment)
         case by
-        of "id":
+        of QueryWhereTypes.ID:
             # check permission for the read task
             var taskPermit = taskPermission(crud, "read")
             let taskValue = taskPermit.value{"ok"}.getBool(false)
@@ -108,14 +108,14 @@ proc getRecord*(crud: CrudParamType; by: string;
             else:
                 # return task permission reponse
                 return taskPermit
-        of "params", "query":
+        of QueryWhereTypes.PARAMS, QueryWhereTypes.QUERY:
             # check permission for the read task
             var taskPermit = taskPermission(crud, "read")
             let taskValue = taskPermit.value{"ok"}.getBool(false)
 
             if taskValue and taskPermit.code == "success":
                 let selectQuery = computeSelectQuery(crud.tableName, crud.queryParam)
-                let whereParam = computeWhereQuery(crud.whereParams)
+                let whereParam = computeWhereQuery(crud.where)
 
                 var getRecScript = selectQuery & " " & whereParam
                 # append skip and limit params
@@ -135,7 +135,7 @@ proc getRecord*(crud: CrudParamType; by: string;
             # get all-recs (upto max-limit) by admin or owner
             
             # compose docIds for getRecords by params
-            if by == "params" or by == "query":
+            if by == QueryWhereTypes.PARAMS or by == QueryWhereTypes.QUERY:
                 let selectQuery = "SELECT id FROM " & crud.tableName
                 let whereParam = computeWhereQuery(crud.where)
 
@@ -166,7 +166,7 @@ proc getRecord*(crud: CrudParamType; by: string;
                 isAdmin = accessInfo.isAdmin
                 userId = accessInfo.userId
                 # check if collId is included in the checkAccess-response
-                proc collAccess(it: RoleService, collId: string): bool =
+                proc collAccess(it: RoleServiceType, collId: string): bool =
                     it.serviceId == collId
                 collAccessPermitted = accessInfo.roleServices.anyIt(collAccess(it, accessInfo.collId))
     
