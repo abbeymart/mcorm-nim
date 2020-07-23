@@ -185,7 +185,7 @@ type
         modelName*: string
         tableName*: string
         recordDesc*: Table[string, FieldDescType]
-        timeStamp*: bool            ## auto-add: createdAt and updatedAt | default: true
+        timeStamp*: bool           ## auto-add: createdAt and updatedAt | default: true
         actorStamp*: bool           ## auto-add: createdBy and updatedBy | default: true
         activeStamp*: bool          ## record active status, isActive (true | false) | default: true
         relations*: seq[RelationType]
