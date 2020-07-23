@@ -143,7 +143,7 @@ type
         minValue*: float
         maxValue*: float
         defaultValue*: proc(): string  # result: cast string-result to fieldType
-        validate*: proc(): bool        # the proc that returns a bool (valid=true/invalid=false)
+        validate*: proc(): bool        # validate value (pattern, format...), returns a bool (valid=true/invalid=false)
         setValue*: proc(): string # transform fieldValue prior to insert/update | cast string-result to fieldType
 
     RecordDescType* = Table[string, FieldDescType ]
@@ -179,12 +179,14 @@ type
         modelName*: string
         tableName*: string
         recordDesc*: Table[string, FieldDescType]
-        timeStamp*: bool            ## auto-add: createdAt and updatedAt
-        actorStamp*: bool           ## auto-add: createdBy and updatedBy
-        activeStamp*: bool          ## record active status, isActive (true | false)
+        timeStamp*: bool            ## auto-add: createdAt and updatedAt | default: true
+        actorStamp*: bool           ## auto-add: createdBy and updatedBy | default: true
+        activeStamp*: bool          ## record active status, isActive (true | false) | default: true
         relations*: seq[RelationType]
         methods*: seq[ProcedureType]    ## model-level procs, e.g fullName(a, b: T): T
         appDb*: Database            ## Db handle
+        alterTable: bool        ## create / alter table and sync existing data, if there was a change to the table structure | default: true       
+                                ## if alterTable: false, it will create/re-create the table, with no data sync
 
     SaveFieldType* = object
         fieldName*: string
