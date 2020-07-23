@@ -25,7 +25,8 @@ proc newModel*(appDb: Database;
         relations: seq[RelationType] = @[];
         timeStamp: bool = true;
         actorStamp: bool = true;
-        activeStamp: bool = true;       
+        activeStamp: bool = true;
+        alterTable: bool = true;       
         methods: seq[ProcedureType] = @[]): ModelType =
     result.appDb = appDb
     result.modelName = modelName
@@ -35,6 +36,7 @@ proc newModel*(appDb: Database;
     result.actorStamp = actorStamp
     result.activeStamp = activeStamp
     result.relations = relations
+    result.alterTable = alterTable
     result.methods = methods
 
 ## Model DDL methods

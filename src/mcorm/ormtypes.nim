@@ -185,7 +185,7 @@ type
         relations*: seq[RelationType]
         methods*: seq[ProcedureType]    ## model-level procs, e.g fullName(a, b: T): T
         appDb*: Database            ## Db handle
-        alterTable: bool        ## create / alter table and sync existing data, if there was a change to the table structure | default: true       
+        alterTable*: bool        ## create / alter table and sync existing data, if there was a change to the table structure | default: true       
                                 ## if alterTable: false, it will create/re-create the table, with no data sync
 
     SaveFieldType* = object
@@ -510,6 +510,10 @@ type
         ##
         actionParams*: seq[SaveParamType]
         queryParam*: QueryParamType
+        queryReadParam*: QueryReadParamType
+        queryDeleteParam*: QueryDeleteParamType
+        queryUpdateParam*: QueryUpdateParamType
+        querySaveParam*: QuerySaveParamType
         ## Bulk Insert Operation: 
         ## insertToParams {tableName: "abc", fieldNames: @["field1", "field2"]}
         ## For tableName: "" will use the default constructor tableName

@@ -54,7 +54,7 @@ proc computeSelectByIdScript*(tableName: string; docIds:seq[string]; fields: seq
 ## computeSelectQuery compose SELECT query from the queryParam
 ## queryType => simple, join, cases, subquery, combined etc.
 proc computeSelectQuery*(tableName: string;
-                        queryParam: QueryReadParamType = QueryReadParamType();
+                        queryParam: QueryParamType = QueryParamType();
                         queryType: QueryTypes = QueryTypes.SELECT;
                         fields: seq[string] = @[]): string =
     if tableName == "":
@@ -67,7 +67,7 @@ proc computeSelectQuery*(tableName: string;
         var fieldLen = 0                  # number of fields in the SELECT statement/query         
         var unspecifiedGroupItemCount = 0 # variable to determine unspecified fieldName(s) to check if query/script should be returned
 
-        if queryParam == QueryReadParamType() or queryParam.fields.len() < 1:
+        if queryParam == QueryParamType() or queryParam.fields.len() < 1:
             if fields.len > 0:
                 var fieldCount = 0
                 fieldLen = fields.len
