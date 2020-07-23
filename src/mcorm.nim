@@ -11,9 +11,9 @@
 
 import mcorm/model
 import mcorm/crud
-import mcorm/getrecord
-import mcorm/saverecord
-import mcorm/deleterecord
+import mcorm/dml/getrecord
+import mcorm//dml/saverecord
+import mcorm/dml/deleterecord
 
 export model
 export crud

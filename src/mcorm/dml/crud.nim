@@ -11,7 +11,7 @@
 import strutils, times, sequtils
 import db_postgres, json, tables
 import mcdb, mccache, mcresponse, mctranslog
-import helpers/helper, ormtypes
+import ../helpers/helper, ../ormtypes
 
 export db_postgres, json, tables
 export mcdb, mccache, mcresponse, mctranslog

@@ -13,8 +13,8 @@
 
 # types
 # import tables
-import ormtypes, mcresponse, mcdb, helpers/helper
-import crud
+import mcresponse, mcdb
+import ../ormtypes
 
 ## Model constructor: for table structure definition
 ## 
@@ -37,7 +37,7 @@ proc newModel*(appDb: Database;
     result.relations = relations
     result.methods = methods
 
-## Model methods
+## Model DDL methods
 ## modelTable methods/procs to create/alter/drop table/index/view..., sync data...
 ## 
 proc createTable*(model: ModelType): ResponseMessage = 
