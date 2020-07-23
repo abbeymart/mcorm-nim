@@ -14,6 +14,7 @@ import strutils, times
 
 import computeCreateTable, computeAlterTable, computeSyncTable
 import computeSelect, computeWhere, computeCreate, computeUpdate, computeDelete
+import jsonToCrudSaveRecord, jsonToCrudReadRecord, jsonToCrudDeleteRecord, jsonToCrudUpdateRecord
 
 export computeCreateTable
 export computeAlterTable
@@ -23,6 +24,10 @@ export computeWhere
 export computeCreate
 export computeUpdate
 export computeDelete
+export jsonToCrudSaveRecord
+export jsonToCrudReadRecord
+export jsonToCrudDeleteRecord
+export jsonToCrudUpdateRecord
 
 ## strToBool procedure converts a string parameter to a boolean
 proc strToBool*(val: string): bool =
