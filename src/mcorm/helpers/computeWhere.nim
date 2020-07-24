@@ -163,7 +163,7 @@ proc computeWhereQuery*(where: seq[WhereParamType]): string =
                     if groupItem.groupOp != "" and groupItemCount < (groupItemsLen - unspecifiedGroupItemCount):
                             fieldQuery = fieldQuery & " " & groupItem.groupOp & " "
                 of OpTypes.IN, OpTypes.INCLUDES:
-                    if groupItem.fieldSubQuery != QueryReadParamType():
+                    if groupItem.fieldSubQuery != QueryParamType():
                         var inValues = "("
                         # include values from SELECT query (e.g. lookup table/collection)
                         let fieldSubQuery = groupItem.fieldSubQuery

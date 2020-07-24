@@ -246,7 +246,6 @@ proc taskPermission*(crud: CrudParamType; taskType: string): ResponseMessage =
                 if crud.docIds.len > 0:
                     recordPermitted = crud.docIds.allIt(recFunc(it))
             of "read", "search":
-                echo "check-create"
                 proc collFunc(item: RoleServiceType): bool = 
                     item.canRead
                 # collection/table level access
@@ -261,6 +260,9 @@ proc taskPermission*(crud: CrudParamType; taskType: string): ResponseMessage =
                 
                 if crud.docIds.len > 0:
                     recordPermitted = crud.docIds.allIt(recFunc(it))
+            else:
+                let ok = OkayResponse(ok: false)
+                return getResMessage("unAuthorized", ResponseMessage(value: %*(ok), message: "Unknown access type or access type not specified"))
         else:
             let ok = OkayResponse(ok: false)
             return getResMessage("unAuthorized", ResponseMessage(value: %*(ok), message: "You are not authorized to perform the requested action/task"))
@@ -273,7 +275,6 @@ proc taskPermission*(crud: CrudParamType; taskType: string): ResponseMessage =
                                             message: "action authorised / permitted")
             result = getResMessage("success", response)
         else:
-            let ok = OkayResponse(ok: false)
             return getResMessage("unAuthorized", ResponseMessage(value: %*(ok), message: "You are not authorized to perform the requested action/task"))
     except:
         let ok = OkayResponse(ok: false)
