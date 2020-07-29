@@ -106,86 +106,8 @@ proc getRecord*(crud: CrudParamType; by: QueryWhereTypes;
             # TODO: transform currentRecs into JSON based on projected fiedls or data model structure
             return getResMessage("success", ResponseMessage(value: %*(getRecs)))
         else:
-            # get all-recs (upto max-limit) by admin or owner
-            
-            # compose docIds for getRecords by params
-            if by == QueryWhereTypes.PARAMS or by == QueryWhereTypes.QUERY:
-                let selectQuery = "SELECT id FROM " & crud.tableName
-                let whereParam = computeWhereQuery(crud.where)
-
-                var getRecScript = selectQuery & " " & whereParam
-                # append skip and limit params
-                getRecScript.add(" SKIP ")
-                getRecScript.add($crud.skip)
-                getRecScript.add(" LIMIT ")
-                getRecScript.add($crud.limit)
-
-                let getRecs =  crud.appDb.db.getAllRows(sql(getRecScript))
-                # reset crud/instance docIds to refresh values
-                crud.docIds = @[]
-                for rec in getRecs:
-                    crud.docIds.add(rec[0])
-
-            # check role-based access
-            var accessRes = checkAccess(accessDb = crud.accessDb, tableName = crud.tableName,
-                                    docIds = crud.docIds, userInfo = crud.userInfo )
-            
-            var isAdmin: bool = false
-            var collAccessPermitted: bool = false
-            var userId: string = ""
-
-            if accessRes.code == "success":
-                # get access info value (json) => toObject
-                let accessInfo = to(accessRes.value, CheckAccess)
-                isAdmin = accessInfo.isAdmin
-                userId = accessInfo.userId
-                # check if collId is included in the checkAccess-response
-                proc collAccess(it: RoleServiceType, collId: string): bool =
-                    it.serviceId == collId
-                collAccessPermitted = accessInfo.roleServices.anyIt(collAccess(it, accessInfo.collId))
-    
-            # if current user is admin or read-access permitted on tableName, get all records
-            if isAdmin or collAccessPermitted:
-                return crud.getAllRecords(fields = fields)
-            
-            # get records owned by the current-user or requestor
-            var getRecScript = ""
-            if fields.len > 0:
-                var 
-                    fieldCount = 0
-                    fieldLen = fields.len
-                # get record(s) based on projected/provided field names (seq[string])
-                getRecScript.add ("SELECT ")
-                for field in fields:
-                    inc fieldCount
-                    getRecScript.add(field)
-                    if fieldLen > 1 and fieldCount < fieldLen:
-                        getRecScript.add(", ")
-                    else:
-                        getRecScript.add(" ")
-                getRecScript.add("WHERE createdby = ")
-                getRecScript.add(userId)
-                getRecScript.add(" ")
-                getRecScript.add(" SKIP ")
-                getRecScript.add($crud.skip)
-                getRecScript.add(" LIMIT ")
-                getRecScript.add($crud.limit) 
-            else:
-                # SELECT all fields in the table / collection
-                getRecScript = "SELECT * FROM " & crud.tableName & " "
-                getRecScript.add("WHERE createdby = ")
-                getRecScript.add(userId)
-                getRecScript.add(" ")
-                getRecScript.add(" SKIP ")
-                getRecScript.add($crud.skip)
-                getRecScript.add(" LIMIT ")
-                getRecScript.add($crud.limit)
-
-            let getRecs =  crud.appDb.db.getAllRows(sql(getRecScript))
-
-            # perform query for the tableName and deliver seq[Row] result to the client/consumer of the CRUD service, as json array
-            # TODO: transform currentRecs into JSON based on projected fiedls or data model structure
-            return getResMessage("success", ResponseMessage(value: %*(getRecs)))
+            const okRes = OkayResponse(ok: false)
+            return getResMessage("saveError", ResponseMessage(value: %*(okRes), message: "Incomplete query conditions"))
     except:
         const okRes = OkayResponse(ok: false)
         return getResMessage("saveError", ResponseMessage(value: %*(okRes), message: getCurrentExceptionMsg()))
