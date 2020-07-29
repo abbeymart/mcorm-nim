@@ -125,25 +125,13 @@ proc saveRecord*(crud: CrudParamType): ResponseMessage =
 
         ## save-record(s): new records, docIds = @[], for createRecs.len > 0
         if createRecs.len > 0:
-            # check permission based on the create and/or update records
-            var taskPermit = taskPermission(crud, "create")
-            let taskValue = taskPermit.value{"ok"}.getBool(false)
-            if taskValue and taskPermit.code == "success":
-                # create/insert new record(s)
-                return createRecord(crud, createRecs)
-            else:
-                return taskPermit
+            # create/insert new record(s)
+            return createRecord(crud, createRecs)
 
         ## update-record(s): existing record(s), docIds != @[], for updateRecs.len > 0
         if updateRecs.len > 0:
-            # check permission based on the create and/or update records
-            var taskPermit = taskPermission(crud, "update")
-            let taskValue = taskPermit.value{"ok"}.getBool(false)
-            if taskValue and taskPermit.code == "success":
-                # update existing record(s)
-                return updateRecord(crud, updateRecs)
-            else:
-                return taskPermit
+            # update existing record(s)
+            return updateRecord(crud, updateRecs)
     except:
         let okRes = OkayResponse(ok: false)
         return getResMessage("saveError", ResponseMessage(value: %*(okRes), message: getCurrentExceptionMsg()))

@@ -27,12 +27,7 @@ proc newGetRecord*(appDb: Database;
   
 proc getAllRecords*(crud: CrudParamType; fields: seq[string] = @[]): ResponseMessage =  
     try:
-        # ensure that checkAccess is false, otherwise send unauthorized response
-        if crud.checkAccess:
-            const okRes = OkayResponse(ok: false)
-            return getResMessage("unAuthorized", ResponseMessage(value: %*(okRes), message: "Operation not authorized"))
-
-        # check query params, skip and limit records to return maximum 100,000 or as set by service consumer
+        # check query params, skip and limit records to return maximum 100_000 or as set by service consumer
         if crud.limit > crud.defaultLimit:
             crud.limit = crud.defaultLimit
 
@@ -79,58 +74,37 @@ proc getRecord*(crud: CrudParamType; by: QueryWhereTypes;
         if crud.skip < 0:
             crud.skip = 0
         
-        # validate taskPermission, otherwise send unauthorized response
-        if not crud.checkAccess:
-            const okRes = OkayResponse(ok: false)
-            return getResMessage("unAuthorized", ResponseMessage(value: %*(okRes), message: "Operation not authorized"))
-        
         # Perform query by: id, params, open (all permitted record - by admin, owner or role assignment)
         case by
         of QueryWhereTypes.ID:
-            # check permission for the read task
-            var taskPermit = taskPermission(crud, "read")
-            let taskValue = taskPermit.value{"ok"}.getBool(false)
+            ## get current records
+            var getRecScript = computeSelectByIdScript(crud.tableName, crud.docIds, fields = fields)
+            # append skip and limit params
+            getRecScript.add(" SKIP ")
+            getRecScript.add($crud.skip)
+            getRecScript.add(" LIMIT ")
+            getRecScript.add($crud.limit)
 
-            if taskValue and taskPermit.code == "success":
-                ## get current records
-                var getRecScript = computeSelectByIdScript(crud.tableName, crud.docIds, fields = fields)
-                # append skip and limit params
-                getRecScript.add(" SKIP ")
-                getRecScript.add($crud.skip)
-                getRecScript.add(" LIMIT ")
-                getRecScript.add($crud.limit)
-
-                # perform query for the tableName and deliver seq[Row] result to the client/consumer of the CRUD service, as json array
-                # TODO: transform currentRecs into JSON based on projected fiedls or data model structure
-                let getRecs =  crud.appDb.db.getAllRows(sql(getRecScript))
-                
-                return getResMessage("success", ResponseMessage(value: %*(getRecs)))
-            else:
-                # return task permission reponse
-                return taskPermit
+            # perform query for the tableName and deliver seq[Row] result to the client/consumer of the CRUD service, as json array
+            # TODO: transform currentRecs into JSON based on projected fiedls or data model structure
+            let getRecs =  crud.appDb.db.getAllRows(sql(getRecScript))
+              
+            return getResMessage("success", ResponseMessage(value: %*(getRecs)))
         of QueryWhereTypes.PARAMS, QueryWhereTypes.QUERY:
-            # check permission for the read task
-            var taskPermit = taskPermission(crud, "read")
-            let taskValue = taskPermit.value{"ok"}.getBool(false)
+            let selectQuery = computeSelectQuery(crud.tableName, crud.queryParam)
+            let whereParam = computeWhereQuery(crud.where)
 
-            if taskValue and taskPermit.code == "success":
-                let selectQuery = computeSelectQuery(crud.tableName, crud.queryParam)
-                let whereParam = computeWhereQuery(crud.where)
+            var getRecScript = selectQuery & " " & whereParam
+            # append skip and limit params
+            getRecScript.add(" SKIP ")
+            getRecScript.add($crud.skip)
+            getRecScript.add(" LIMIT ")
+            getRecScript.add($crud.limit)
 
-                var getRecScript = selectQuery & " " & whereParam
-                # append skip and limit params
-                getRecScript.add(" SKIP ")
-                getRecScript.add($crud.skip)
-                getRecScript.add(" LIMIT ")
-                getRecScript.add($crud.limit)
-
-                let getRecs =  crud.appDb.db.getAllRows(sql(getRecScript))
-                # perform query for the tableName and deliver seq[Row] result to the client/consumer of the CRUD service, as json array
-                # TODO: transform currentRecs into JSON based on projected fiedls or data model structure
-                return getResMessage("success", ResponseMessage(value: %*(getRecs)))
-            else:
-                # return task permission reponse
-                return taskPermit
+            let getRecs =  crud.appDb.db.getAllRows(sql(getRecScript))
+            # perform query for the tableName and deliver seq[Row] result to the client/consumer of the CRUD service, as json array
+            # TODO: transform currentRecs into JSON based on projected fiedls or data model structure
+            return getResMessage("success", ResponseMessage(value: %*(getRecs)))
         else:
             # get all-recs (upto max-limit) by admin or owner
             

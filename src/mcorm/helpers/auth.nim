@@ -214,7 +214,6 @@ proc taskPermission*(crud: CrudParamType; taskType: string): ResponseMessage =
                 # collection/table level access | only tableName Id was included in serviceIds
                 if roleTables.len > 0:
                     collPermitted = roleTables.allIt(collFunc(it))
-
             of "update":
                 proc collFunc(item: RoleServiceType): bool = 
                     item.canUpdate

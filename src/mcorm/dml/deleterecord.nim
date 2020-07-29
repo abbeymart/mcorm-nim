@@ -113,25 +113,11 @@ proc deleteRecord*(crud: CrudParamType; by: string;
         
         case by:
         of "id":
-            # check permission based on the delete task
-            var taskPermit = taskPermission(crud, "delete")
-            let taskValue = taskPermit.value{"ok"}.getBool(false)
-            if taskValue and taskPermit.code == "success":
-                # delete record(s) by id
+            # delete record(s) by id
                 return deleteRecordById(crud)
-            else:
-                # return task permission response (unAuthorized)
-                return taskPermit
         of "params", "query":
-            # check permission based on the create and/or update records
-            var taskPermit = taskPermission(crud, "delete")
-            let taskValue = taskPermit.value{"ok"}.getBool(false)
-            if taskValue and taskPermit.code == "success":
-                # delete record(s) by params/query
+            # delete record(s) by params/query
                 return deleteRecordByParam(crud)
-            else:
-                # return task permission response (unAuthorized)
-                return taskPermit
     except:
         let okRes = OkayResponse(ok: false)
         return getResMessage("saveError", ResponseMessage(value: %*(okRes), message: getCurrentExceptionMsg()))

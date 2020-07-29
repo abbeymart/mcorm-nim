@@ -2,7 +2,7 @@ import ../ormtypes
 
 ## updateScript compose update SQL script
 ## 
-proc computeUpdateScript*(tableName: string, actionParams: seq[QuerySaveParamType], docIds: seq[string]): seq[string] =
+proc computeUpdateScript*(tableName: string, actionParams: seq[SaveParamType], docIds: seq[string]): seq[string] =
     if docIds.len < 1 or tableName == "" or actionParams.len < 1 :
         raise newException(UpdateQueryError, "Table/collection name, doc-ids and action-params are required for the update operation")
     
