@@ -10,7 +10,7 @@
 
 ## get-record procedure is for fetching records by role (access-control)
 ## 
-import crud, sequtils
+import crud
 
 # constructor
 ## get-record operations constructor

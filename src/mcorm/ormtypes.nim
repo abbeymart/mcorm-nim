@@ -457,20 +457,23 @@ type
         canCreate*: bool
         canUpdate*: bool
         canDelete*: bool
-        collAccessPermitted: bool
+    
+    OkayResponse* = object
+        ok*: bool
     
     CheckAccess* = object
         userId*: string
-        userRole*: string
-        userRoles*: JsonNode
+        group*: string
+        groups*: seq[string]
         isActive*: bool
         isAdmin*: bool
         roleServices*: seq[RoleServiceType]
         collId*: string
 
-    OkayResponse* = object
+    PermissionType* = object
         ok*: bool
-    
+        accessInfo*: CheckAccess
+
     CurrentRecord* = object
         currentRec*: seq[Row]
     
@@ -499,7 +502,7 @@ type
         id*: string         # stored as uuid in the DB
         firstName*: string
         lastName*: string
-        lang*: string
+        language*: string
         loginName*: string
         email*: string
         token*: string

@@ -155,10 +155,11 @@ proc taskPermission*(crud: CrudParamType; taskType: string): ResponseMessage =
         # check role-based access
         var accessRes = checkAccess(accessDb = crud.accessDb, tableName = crud.tableName,
                                     docIds = crud.docIds, userInfo = crud.userInfo )
-
+        var accessInfo: CheckAccess
+        
         if accessRes.code == "success":
             # get access info value (json) => toObject
-            let accessInfo = to(accessRes.value, CheckAccess)
+            accessInfo = to(accessRes.value, CheckAccess)
 
             # ownership (i.e. created by userId) for all currentRecords (update/delete...)
             let accessUserId = accessInfo.userId
@@ -270,11 +271,13 @@ proc taskPermission*(crud: CrudParamType; taskType: string): ResponseMessage =
         taskPermitted = recordPermitted or collPermitted or ownerPermitted or isAdmin
         let ok = OkayResponse(ok: taskPermitted)
         if taskPermitted:
-            let response  = ResponseMessage(value: %*(ok),
+            var accessResult = PermissionType(ok: taskPermitted, accessInfo: accessInfo)
+            let response  = ResponseMessage(value: %*(accessResult),
                                             message: "action authorised / permitted")
             result = getResMessage("success", response)
         else:
-            return getResMessage("unAuthorized", ResponseMessage(value: %*(ok), message: "You are not authorized to perform the requested action/task"))
+            var accessResult = PermissionType(ok: taskPermitted, accessInfo: accessInfo)
+            return getResMessage("unAuthorized", ResponseMessage(value: %*(accessResult), message: "You are not authorized to perform the requested action/task"))
     except:
         let ok = OkayResponse(ok: false)
         return getResMessage("unAuthorized", ResponseMessage(value: %*(ok), message: getCurrentExceptionMsg()))
