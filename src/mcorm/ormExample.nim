@@ -9,8 +9,8 @@
 #
 
 import times, tables, json
-import model
-import crud
+import ddl/model
+import dml/crud
 
 # Examples:
 
@@ -50,7 +50,7 @@ proc GroupModel(): ModelType =
 
 proc UserModel*(): ModelType =
     # Table structure / model definitions
-    var recordDesc = initTable[string, FieldDescType]()
+    var recordDesc: Table[string, FieldDescType]
     
     # Model recordDesc definition
     recordDesc["id"] = FieldDescType(

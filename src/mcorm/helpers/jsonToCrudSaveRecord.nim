@@ -10,7 +10,7 @@ var
     saveFields: seq[SaveFieldType] = @[]
     whereParam: seq[WhereParamType] = @[]
 
-proc jsonToCrudSaveRecord(model: ModelType, jNode: JsonNode): QuerySaveParamType =
+proc jsonToCrudSaveRecord(model: ModelType, jNode: JsonNode): SaveParamType =
     # TODO: compose CRUD meta-data based on JSON data request and defined model
     for fieldName, fieldDesc in model.recordDesc.pairs():
         # errorChecking
@@ -95,7 +95,7 @@ proc jsonToCrudSaveRecord(model: ModelType, jNode: JsonNode): QuerySaveParamType
     
     # check errorMessage
 
-    result = QuerySaveParamType(
+    result = SaveParamType(
         tableName: "users",
         fields: saveFields,
         where: whereParam,
