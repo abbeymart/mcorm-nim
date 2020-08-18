@@ -1,24 +1,28 @@
 # Testing data
 
-import mccrud, times, json, strutils
+import times, json, strutils
+import mcdb, mcorm, mctranslog
 
 var defaultSecureOption = DbSecureType(secureAccess: false)
 
-var defaultDbOptions = DbOptionType(fileName: "testdb.db", hostName: "localhost",
+var defaultDbOptions = DbOptionType(fileName: "testdb.db",
+                                hostName: "localhost",
                                 hostUrl: "localhost:5432",
-                                userName: "postgres", password: "ab12trust",
-                                dbName: "mccentral", port: 5432,
+                                userName: "postgres",
+                                password: "ab12trust",
+                                dbName: "mccentral",
+                                port: 5432,
                                 dbType: "postgres", poolSize: 20,
                                 secureOption: defaultSecureOption )
 
 # db connection / instance
 var dbConnect = newDatabase(defaultDbOptions)
 
-var userInfo = UserParam(
+var userInfo = UserParamType(
     id: "5b0e139b3151184425aae01c",
     firstName: "Abi",
     lastName: "Akindele",
-    lang: "en-US",
+    language: "en-US",
     loginName: "abbeymart",
     email: "abbeya1@yahoo.com",
     token: "aaaaaaaaaaaaaaa455YFFS99902zzz"
@@ -96,15 +100,15 @@ var createRecords = @[
     auditRec,
 ]
 
-proc generateCreateActionParams(recs: seq[object]): seq[QueryParam] =
-    var actionParams: seq[QueryParam] = @[]
+proc generateCreateActionParams(recs: seq[object]): seq[QueryParamType] =
+    var actionParams: seq[QueryParamType] = @[]
 
     for recItem in recs:
         echo "add field-info drom recItem"
-        var queryParam = QueryParam()
+        var queryParam = QueryParamType()
         for key, value in recItem.fieldPairs:
             queryParam.fieldItems.add(
-                FieldItem(
+                FieldDescType(
                     fieldName: key.toLower(),
                     fieldValue: $(value),
                     fieldType: $(typeof key),

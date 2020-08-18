@@ -2,7 +2,7 @@ import ../ormtypes
 
 ## createScript compose insert SQL script
 ## 
-proc computeCreateScript*(tableName: string, actionParams: seq[QuerySaveParamType]): seq[string] = 
+proc computeCreateScript*(tableName: string, actionParams: seq[SaveParamType]): seq[string] = 
     if tableName == "" or actionParams.len < 1 :
         raise newException(CreateQueryError, "Table/collection name and action-params are required for the create operation")
     

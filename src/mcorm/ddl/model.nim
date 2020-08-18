@@ -16,6 +16,8 @@
 import mcresponse, mcdb
 import ../ormtypes
 
+export ormtypes
+
 ## Model constructor: for table structure definition
 ## 
 proc newModel*(appDb: Database;
