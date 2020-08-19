@@ -9,11 +9,11 @@
 ## ORM types | centralised and exported types for all ORM operations:
 ## SQL-DDL (CREATE...), SQL-DML/CRUD(INSERT, SELECT, UPDATE, DELETE...) operations
 ## 
-import json, db_postgres, tables, times
+import db_postgres, tables, times
 import mcdb, mctranslog
 
 # Define ORM Types
-type
+type 
     DataTypes* = enum
         STRING,
         TEXT,
@@ -42,7 +42,7 @@ type
         MCDB,       ## Database connection handle
         MODEL_RECORD,   ## Model record definition
         MODEL_VALUE,   ## Model value definition
-        
+  
     ProcedureTypes* = enum
         PROC,              ## proc(): T
         VALIDATE_PROC,      ## proc(val: T): bool

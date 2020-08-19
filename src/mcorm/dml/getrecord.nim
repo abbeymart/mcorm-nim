@@ -23,7 +23,9 @@ proc newGetRecord*(appDb: Database;
                     fields: seq[string] = @[]; 
                     options: Table[string, DataTypes]): CrudParamType =
     ## base / shared constructor
-    result = newCrud(appDb, tableName, userInfo, where = where, docIds = docIds, options = options )
+    result = newCrud(appDb = appDb, tableName = tableName,
+                    userInfo = userInfo, where = where,
+                    docIds = docIds, options = options )
   
 proc getAllRecords*(crud: CrudParamType; fields: seq[string] = @[]): ResponseMessage =  
     try:

@@ -28,7 +28,7 @@ proc newCrud*(appDb: Database;
             querySaveParam: QuerySaveParamType = QuerySaveParamType();
             where: seq[WhereParamType] = @[];
             docIds: seq[string] = @[];
-            inserInto: seq[InsertIntoType] = @[];
+            insertInto: seq[InsertIntoType] = @[];
             selectFrom: seq[SelectFromType] = @[];
             selectInto: seq[SelectIntoType] = @[];
             queryFunctions: seq[ProcedureTypes] = @[];
@@ -74,7 +74,7 @@ proc newCrud*(appDb: Database;
     result.docIds = docIds
    
     # Create/Update
-    result.insertInto = inserInto
+    result.insertInto = insertInto
     result.selectFrom = selectFrom
     result.selectInto = selectInto
 
