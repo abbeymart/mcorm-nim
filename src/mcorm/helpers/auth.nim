@@ -75,7 +75,7 @@ proc checkAccess*(
             return getResMessage("unAuthorized", ResponseMessage(value: nil, message: "Unauthorized: please ensure that you are logged-in") )
 
         # check current current-user status/info
-        let userQuery = sql("SELECT id, active_group, groups, is_active, profile FROM " & userTable &
+        let userQuery = sql("SELECT id, active_group, groups, is_active, is_admin, profile FROM " & userTable &
                             " WHERE id = " & userInfo.id & " AND is_active = true")
 
         let currentUser = accessDb.db.getRow(userQuery)
@@ -107,10 +107,10 @@ proc checkAccess*(
         # userRoles: {roles: ["cd", "ef", "gh"]}
         # TODO: check/validate parseJson result of the currentUser jsonb string value
         let accessRes = CheckAccess(userId: currentUser[0],
-                                    userRole: currentUser[1],
-                                    userRoles: parseJson(currentUser[2]),
+                                    group: currentUser[1],
+                                    groups: strToSeq(currentUser[2]),
                                     isActive: strToBool(currentUser[3]),
-                                    isAdmin: parseJson(currentUser[4]){"is_dmin"}.getBool(false),
+                                    isAdmin: strToBool(currentUser[4]),
                                     roleServices: roleServices,
                                     collId: collId
                                     )

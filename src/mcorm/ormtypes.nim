@@ -9,7 +9,7 @@
 ## ORM types | centralised and exported types for all ORM operations:
 ## SQL-DDL (CREATE...), SQL-DML/CRUD(INSERT, SELECT, UPDATE, DELETE...) operations
 ## 
-import db_postgres, tables, times
+import db_postgres, tables, times, json
 import mcdb, mctranslog
 
 # Define ORM Types

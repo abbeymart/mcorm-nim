@@ -15,6 +15,17 @@ proc strToBool*(val: string): bool =
     except:
         return false
 
+## strToSeq procedure converts a stringified array to seq[string]
+proc strToSeq*(val: string): seq[string] =
+    try:
+        var seqRes: seq[string] = @[]
+        let strVal = val.split(",")
+        for item in strVal:
+            seqRes.add(item)
+        return seqRes
+    except:
+        return @[]    
+
 ## strToTime converts time from string to Time format
 proc strToTime*(val: string): Time =
     try:
