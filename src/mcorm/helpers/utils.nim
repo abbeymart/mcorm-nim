@@ -28,9 +28,9 @@ proc strToSeq*(val: string): seq[string] =
             strVal = val.split({',', ']'})        
         else:
             strVal = val.split(',')
-        
+    
         for item in strVal:
-            seqRes.add(item)
+            seqRes.add(item.strip)
         return seqRes
     except:
         return @[]    
