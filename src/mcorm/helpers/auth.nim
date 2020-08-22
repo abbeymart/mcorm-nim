@@ -160,6 +160,7 @@ proc taskPermission*(crud: CrudParamType; taskType: string): ResponseMessage =
         if accessRes.code == "success":
             # get access info value (json) => toObject
             accessInfo = to(accessRes.value, CheckAccess)
+            # accessInfo = to[CheckAccess]($$accessRes.value) ## required marshal module
 
             # ownership (i.e. created by userId) for all currentRecords (update/delete...)
             let accessUserId = accessInfo.userId
@@ -269,7 +270,7 @@ proc taskPermission*(crud: CrudParamType; taskType: string): ResponseMessage =
         
         # overall access permitted
         taskPermitted = recordPermitted or collPermitted or ownerPermitted or isAdmin
-        let ok = OkayResponse(ok: taskPermitted)
+        # let ok = OkayResponse(ok: taskPermitted)
         if taskPermitted:
             var accessResult = PermissionType(ok: taskPermitted, accessInfo: accessInfo)
             let response  = ResponseMessage(value: %*(accessResult),

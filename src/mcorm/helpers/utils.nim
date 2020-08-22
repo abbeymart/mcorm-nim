@@ -15,11 +15,20 @@ proc strToBool*(val: string): bool =
     except:
         return false
 
-## strToSeq procedure converts a stringified array to seq[string]
+## strToSeq procedure converts a csv or stringified array to seq[string]
 proc strToSeq*(val: string): seq[string] =
     try:
         var seqRes: seq[string] = @[]
-        let strVal = val.split(",")
+        var strVal: seq[string]
+        if val.contains('[') and val.contains(']'):
+            strVal = val.split({'[', ',', ']'})
+        elif val.contains('[') and not val.contains(']'):
+            strVal = val.split({',', '['})
+        elif val.contains(']') and not val.contains('['):
+            strVal = val.split({',', ']'})        
+        else:
+            strVal = val.split(',')
+        
         for item in strVal:
             seqRes.add(item)
         return seqRes
