@@ -9,10 +9,15 @@
 ## ORM types | centralised and exported types for all ORM operations:
 ## SQL-DDL (CREATE...), SQL-DML/CRUD(INSERT, SELECT, UPDATE, DELETE...) operations
 ## 
-import db_postgres, tables, times, json
+import db_postgres, tables, times
 import mcdb, mctranslog
 
 # Define ORM Types
+type
+    BaseString = string
+    BaseText = string
+    BaseVarChar = string
+
 type 
     DataTypes* = enum
         STRING,
@@ -43,6 +48,9 @@ type
         MODEL_RECORD,   ## Model record definition
         MODEL_VALUE,   ## Model value definition
   
+    ProcType = proc(): string
+    ProcValidateType = proc(): bool
+
     ProcedureTypes* = enum
         PROC,              ## proc(): T
         VALIDATE_PROC,      ## proc(val: T): bool
@@ -133,7 +141,7 @@ type
     UpdatedAtType* = DateTime
 
     ProcedureType* = object
-        procName*: proc(): string   # proc/method definition
+        procDesc: ProcType          # return string to be cast into procReturnType
         procParams*: seq[string]    # proc params/fieldNames, to be injected into procName, used to get the fieldValue
         procReturnType*: DataTypes  # proc return type
 
@@ -148,9 +156,9 @@ type
         primaryKey*: bool
         minValue*: float
         maxValue*: float
-        defaultValue*: proc(): string  # result: cast string-result to fieldType
-        validate*: proc(): bool        # validate value (pattern, format...), returns a bool (valid=true/invalid=false)
-        setValue*: proc(): string # transform fieldValue prior to insert/update | cast string-result to fieldType
+        defaultValue*: ProcType  # result/return type (DataTypes) must match the fieldType
+        validate*: ProcValidateType       # validate value (pattern, format...), returns a bool (valid=true/invalid=false)
+        setValue*: ProcType # transform fieldValue prior to insert/update | cast string-result to fieldType
 
     RecordDescType* = Table[string, FieldDescType ]
     
