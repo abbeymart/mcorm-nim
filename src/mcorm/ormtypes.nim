@@ -48,15 +48,15 @@ type
         MODEL_RECORD,   ## Model record definition
         MODEL_VALUE,   ## Model value definition
   
-    ProcType = proc(): string
+    ProcType = proc(): DataTypes
     ProcValidateType = proc(): bool
 
     ProcedureTypes* = enum
         PROC,              ## proc(): T
         VALIDATE_PROC,      ## proc(val: T): bool
         DEFAULT_PROC,       ## proc(): T
-        SET_PROC,           ## proc(): T
-        GET_PROC,           ## proc(): T
+        SET_PROC,           ## proc(val: T)
+        GET_PROC,           ## proc(key: string): T
         UNARY_PROC,         ## proc(val: T): T
         BI_PROC,            ## proc(valA, valB: T): T
         PREDICATE_PROC,     ## proc(val: T): bool
@@ -68,10 +68,25 @@ type
         COMPARATOR_PROC,    ## proc(valA, valB: T): int
         MODEL_PROC,         ## proc(): Model  | to define new data model
 
-    OpTypes* = enum
-        AND,
-        OR,
-        NE,
+    TransformProcedureType*[T, R] = proc(val: T): R
+    ValidateProcedureType*[T] = proc(val: T): bool
+    SetProcedureType*[T] = proc(val: T)
+    GetProcedureType*[K, V] = proc(key: K): V
+    IPredicateType* = proc(val: int): bool {.closure.} # {.closure.} is default to proc type
+    StringPredicateType* = proc(val: string): bool {.closure.} 
+    PredicateType*[T] = proc(val: T): bool {.closure.} 
+    BinaryPredicateType*[T, U] = proc(val1: T, val2: U ): bool {.closure.} 
+    UnaryOperatorType*[T] = proc(val: T): T {.closure.} 
+    BinaryOperatorType*[T] = proc(val1, val2: T): T {.closure.} 
+    FunctionType*[T, R] = proc(val: T): R {.closure.} 
+    BiFunctionType*[T, U, R] = proc(val1: T, val2: U): R {.closure.} 
+    ConsumeType*[T] = proc(val: T) {.closure.} 
+    BiConsumerType*[T, U] = proc(val1: T, val2: U) {.closure.} 
+    SupplierType*[R] = proc(): R {.closure.} 
+    ComparatorType*[T] = proc(val1: T, val2: T): int {.closure.} 
+
+
+    OperatorTypes* = enum
         EQ,
         GT,
         GTE,
@@ -83,6 +98,7 @@ type
         BETWEEN,
         NOT_BETWEEN,
         INCLUDES,
+        EXCLUDES,
         LIKE,
         NOT_LIKE,
         STARTS_WITH,
@@ -95,6 +111,10 @@ type
         NOT_IREGEX,
         ANY,
         ALL,
+
+    RelationTypes* = enum
+        AND,
+        OR,
 
     QueryTypes* = enum        
         SAVE,
@@ -135,11 +155,12 @@ type
 
     uuId* = string
 
-    CreatedByType* = uuId
-    UpdatedByType* = uuId
-    CreatedAtType* = DateTime
-    UpdatedAtType* = DateTime
+    CreatedByType* = uuId | DataTypes
+    UpdatedByType* = uuId | DataTypes
+    CreatedAtType* = DateTime | DataTypes
+    UpdatedAtType* = DateTime | DataTypes
 
+    # TODO: review / simplify definition
     ProcedureType* = object
         procDesc: ProcType          # return string to be cast into procReturnType
         procParams*: seq[string]    # proc params/fieldNames, to be injected into procName, used to get the fieldValue
@@ -147,9 +168,9 @@ type
 
     FieldDescType* = object
         fieldType*: DataTypes
-        fieldLength*: int
+        fieldLength*: Positive
         fieldPattern*: string # "![0-9]" => excluding digit 0 to 9 | "![_, -, \, /, *, |, ]" => exclude the charaters
-        fieldFormat*: string # "12.2" => max 12 digits, including 2 digits after the decimal
+        fieldFormat*: string # "12.2" => max 12 digits, including 2 digits after the decimal => fieldPattern
         notNull*: bool
         unique*: bool
         indexable*: bool
@@ -157,8 +178,8 @@ type
         minValue*: float
         maxValue*: float
         defaultValue*: ProcType  # result/return type (DataTypes) must match the fieldType
-        validate*: ProcValidateType       # validate value (pattern, format...), returns a bool (valid=true/invalid=false)
-        setValue*: ProcType # transform fieldValue prior to insert/update | cast string-result to fieldType
+        validate*: ProcValidateType       # validate field-value (pattern/format), returns a bool (valid=true/invalid=false)
+        setValue*: ProcType # transform fieldValue prior to insert/update | result/return type (DataTypes) must match the fieldType or cast string-result to fieldType
 
     RecordDescType* = Table[string, FieldDescType ]
     
@@ -178,6 +199,8 @@ type
     ## Model/table relationship, from source-to-target
     ## 
     RelationType* = ref object
+        sourceModel*: ModelType
+        sourceTable*: string
         relationType*: RelationTypeTypes   # one-to-one, one-to-many, many-to-one, many-to-many
         targetField*: string    # default: primary key/"id" field, it could be another unique key
         targetModel*: ModelType
@@ -246,12 +269,12 @@ type
         fieldType*: DataTypes
         fieldName*: string
         fieldOrder*: int
-        fieldOp*: OpTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
+        fieldOp*: OperatorTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
         fieldValue*: string  ## for insert/update | start value for range/BETWEEN/NOTBETWEEN and pattern for LIKE operators
         fieldValueEnd*: string   ## end value for range/BETWEEN/NOTBETWEEN operator
         fieldValues*: seq[string] ## values for IN/NOTIN operator
         fieldSubQuery*: QueryParamType ## for WHERE IN (SELECT field from fieldTable)
-        fieldPostOp*: OpTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
+        fieldPostOp*: OperatorTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
         groupOp*: string     ## e.g. AND | OR...
         fieldProc*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
         fieldProcFields*: seq[string] ## parameters for the fieldProc
@@ -304,12 +327,12 @@ type
         fieldName*: string
         fieldType*: DataTypes   ## "int", "string", "bool", "boolean", "float",...
         fieldOrder*: int
-        fieldOp*: OpTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
+        fieldOp*: OperatorTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
         fieldValue*: string  ## for insert/update | start value for range/BETWEEN/NOTBETWEEN and pattern for LIKE operators
         fieldValueEnd*: string   ## end value for range/BETWEEN/NOTBETWEEN operator
         fieldValues*: seq[string] ## values for IN/NOTIN operator
         fieldSubQuery*: QueryParamType ## for WHERE IN (SELECT field from fieldTable)
-        fieldPostOp*: OpTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
+        fieldPostOp*: OperatorTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
         groupOp*: string     ## e.g. AND | OR...
         fieldAlias*: string ## for SELECT/Read query
         show*: bool     ## includes or excludes from the SELECT query fields
@@ -333,12 +356,12 @@ type
         fieldName*: string
         fieldType*: DataTypes   ## "int", "string", "bool", "boolean", "float",...
         fieldOrder*: int
-        fieldOp*: OpTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
+        fieldOp*: OperatorTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
         fieldValue*: string  ## for insert/update | start value for range/BETWEEN/NOTBETWEEN and pattern for LIKE operators
         fieldValueEnd*: string   ## end value for range/BETWEEN/NOTBETWEEN operator
         fieldValues*: seq[string] ## values for IN/NOTIN operator
         fieldSubQuery*: QueryParamType ## for WHERE IN (SELECT field from fieldTable)
-        fieldPostOp*: OpTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
+        fieldPostOp*: OperatorTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
         groupOp*: string     ## e.g. AND | OR...
         fieldAlias*: string ## for SELECT/Read query
         show*: bool     ## includes or excludes from the SELECT query fields
@@ -353,12 +376,12 @@ type
         fieldName*: string
         fieldType*: DataTypes   ## "int", "string", "bool", "boolean", "float",...
         fieldOrder*: int
-        fieldOp*: OpTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
+        fieldOp*: OperatorTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
         fieldValue*: string  ## for insert/update | start value for range/BETWEEN/NOTBETWEEN and pattern for LIKE operators
         fieldValueEnd*: string   ## end value for range/BETWEEN/NOTBETWEEN operator
         fieldValues*: seq[string] ## values for IN/NOTIN operator
         fieldSubQuery*: QueryParamType ## for WHERE IN (SELECT field from fieldTable)
-        fieldPostOp*: OpTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
+        fieldPostOp*: OperatorTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
         groupOp*: string     ## e.g. AND | OR...
         fieldAlias*: string ## for SELECT/Read query
         show*: bool     ## includes or excludes from the SELECT query fields
@@ -384,7 +407,7 @@ type
     HavingType* = object
         tableName: string
         queryProc*: ProcedureTypes
-        queryOp*: OpTypes
+        queryOp*: OperatorTypes
         queryOpValue*: string ## value will be cast to fieldType in queryProc
         orderType*: OrderTypes ## "ASC" ("asc") | "DESC" ("desc")
         # subQueryParams*: SubQueryParam # for ANY, ALL, EXISTS...
@@ -392,7 +415,7 @@ type
     SubQueryType* = object
         whereType*: string   ## EXISTS, ANY, ALL
         whereField*: string  ## for ANY / ALL | Must match the fieldName in QueryParamType
-        whereOp*: OpTypes     ## e.g. "=" for ANY / ALL
+        whereOp*: OperatorTypes     ## e.g. "=" for ANY / ALL
         queryParams*: QueryParamType
         queryWhereParams*: WhereParamType
 
@@ -403,12 +426,12 @@ type
         fieldName*: string
         fieldType*: DataTypes   ## "int", "string", "bool", "boolean", "float",...
         fieldOrder*: int
-        fieldOp*: OpTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
+        fieldOp*: OperatorTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
         fieldValue*: string  ## for insert/update | start value for range/BETWEEN/NOTBETWEEN and pattern for LIKE operators
         fieldValueEnd*: string   ## end value for range/BETWEEN/NOTBETWEEN operator
         fieldValues*: seq[string] ## values for IN/NOTIN operator
         fieldSubQuery*: QueryParamType ## for WHERE IN (SELECT field from fieldTable)
-        fieldPostOp*: OpTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
+        fieldPostOp*: OperatorTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
         groupOp*: string     ## e.g. AND | OR...
         fieldAlias*: string ## for SELECT/Read query
         show*: bool     ## includes or excludes from the SELECT query fields
@@ -433,12 +456,12 @@ type
         fieldName*: string
         fieldType*: DataTypes   ## "int", "string", "bool", "boolean", "float",...
         fieldOrder*: int
-        fieldOp*: OpTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
+        fieldOp*: OperatorTypes    ## GT/gt/>, EQ/==, GTE/>=, LT/<, LTE/<=, NEQ(<>/!=), BETWEEN, NOTBETWEEN, IN, NOTIN, LIKE, IS, ISNULL, NOTNULL etc., with matching params (fields/values)
         fieldValue*: string  ## for insert/update | start value for range/BETWEEN/NOTBETWEEN and pattern for LIKE operators
         fieldValueEnd*: string   ## end value for range/BETWEEN/NOTBETWEEN operator
         fieldValues*: seq[string] ## values for IN/NOTIN operator
         fieldSubQuery*: QueryParamType ## for WHERE IN (SELECT field from fieldTable)
-        fieldPostOp*: OpTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
+        fieldPostOp*: OperatorTypes ## EXISTS, ANY or ALL e.g. WHERE fieldName <fieldOp> <fieldPostOp> <anyAllQueryParams>
         groupOp*: string     ## e.g. AND | OR...
         fieldAlias*: string ## for SELECT/Read query
         show*: bool     ## includes or excludes from the SELECT query fields
