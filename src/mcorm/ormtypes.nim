@@ -233,7 +233,7 @@ type
 
     SaveFieldType* = object
         fieldName*: string
-        fieldValue*: string
+        fieldValue*: string     ## must match the field DataTypes
         fieldOrder*: int
         fieldType*: DataTypes
         fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
