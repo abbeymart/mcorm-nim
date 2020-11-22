@@ -48,7 +48,7 @@ type
         MODEL_RECORD,   ## Model record definition
         MODEL_VALUE,   ## Model value definition
   
-    ProcType = proc(): DataTypes
+    ProcType = proc(): DataTypes    ## will automatically receive record value for the model
     ProcValidateType = proc(): bool
 
     ProcedureTypes* = enum
@@ -166,6 +166,11 @@ type
         procParams*: seq[string]    # proc params/fieldNames, to be injected into procName, used to get the fieldValue
         procReturnType*: DataTypes  # proc return type
 
+    ComputedFieldType* = object
+        fieldName*: string
+        fieldType*: DataTypes
+        fieldMethod*: ProcType
+
     FieldDescType* = object
         fieldType*: DataTypes
         fieldLength*: Positive
@@ -201,10 +206,10 @@ type
     RelationType* = ref object
         sourceModel*: ModelType
         sourceTable*: string
-        relationType*: RelationTypeTypes   # one-to-one, one-to-many, many-to-one, many-to-many
-        targetField*: string    # default: primary key/"id" field, it could be another unique key
         targetModel*: ModelType
         targetTable*: string
+        relationType*: RelationTypeTypes   # one-to-one, one-to-many, many-to-one, many-to-many  
+        targetField*: string    # default: primary key/"id" field, it could be another unique key
         foreignKey*: string     # default: sourceModel<sourceField>, e.g. userId
         relationTable*: string # optional tableName for many-to-many | default: sourceTable_targetTable
         onDelete*: RelationOptionTypes
@@ -215,14 +220,15 @@ type
     ModelType* = ref object
         modelName*: string
         tableName*: string
-        recordDesc*: Table[string, FieldDescType]
+        recordDesc*: Table[string, FieldDescType] | RecordDescType
         timeStamp*: bool           ## auto-add: createdAt and updatedAt | default: true
         actorStamp*: bool           ## auto-add: createdBy and updatedBy | default: true
         activeStamp*: bool          ## record active status, isActive (true | false) | default: true
         relations*: seq[RelationType]
-        methods*: seq[ProcedureType]    ## model-level procs, e.g fullName(a, b: T): T
-        appDb*: Database            ## Db handle
-        alterTable*: bool        ## create / alter table and sync existing data, if there was a change to the table structure | default: true       
+        computedFields*: seq[ComputedFieldType]
+        # methods*: seq[ProcedureType]    ## model-level procs, e.g fullName(a, b: T): T
+        appDb*: Database        ## Db handle
+        alterTable*: bool       ## create / alter table and sync existing data, if there was a change to the table structure | default: true       
                                 ## if alterTable: false, it will create/re-create the table, with no data sync
 
     SaveFieldType* = object
