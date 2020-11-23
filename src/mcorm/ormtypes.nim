@@ -234,13 +234,11 @@ type
     SaveFieldType* = object
         fieldName*: string
         fieldValue*: string     ## must match the field DataTypes
-        fieldOrder*: int
+        fieldOrder*: Positive
         fieldType*: DataTypes
         fieldFunction*: ProcedureTypes ## COUNT, MIN, MAX... for select/read-query...
 
-    CreateFieldType* = object
-        fieldName*: string
-        fieldValue*: string 
+    CreateFieldType* = Table[string, string] ## key = fieldName, value = fieldValue | must match model definition
 
     UpdateFieldType* = object
         fieldName*: string
