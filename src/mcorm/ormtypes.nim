@@ -20,53 +20,76 @@ type
 
 type 
     DataTypes* = enum
-        STRING,
-        TEXT,
-        VARCHAR,
-        UUID,
-        NUMBER,
-        POSITIVE,
-        INT,
-        FLOAT,
-        BOOL,
-        BOOLEAN,
-        JSON,
-        BIGINT,
-        BIGFLOAT,
-        DATE,
-        DATETIME,
-        TIMESTAMP,
-        TIMESTAMPZ,
-        TIME,
-        OBJECT,     ## key-value pairs
-        ENUM,       ## Enumerations
-        SET,        ## Unique values set
-        ARRAY,
-        SEQ,
-        TABLE,      ## Table/Map/Dictionary
-        MCDB,       ## Database connection handle
-        MODEL_RECORD,   ## Model record definition
-        MODEL_VALUE,   ## Model value definition
+        STRING = "string",
+        # STRING_ALPHA = "stringalpha",
+        # STRING_ALPHA_NUMERIC = "stringalphanumeric",
+        POSTALCODE = "postalcode",
+        UUID = "uuid",
+        NUMBER = "number",
+        INTEGER = "integer",
+        DECIMAL = "decimal",
+        FLOAT = "float",
+        BIGFLOAT = "bigfloat",
+        ARRAY = "array",
+        ARRAYSTRING = "arrayOfString",
+        ARRAYNUMBER = "arrayOfNumber",
+        ARRAYBOOLEAN = "arrayOfBoolean",
+        ARRAYOBJECT = "arrayOfObject",
+        BOOLEAN = "boolean",
+        DATETIME = "datetime",
+        DATE = "date",
+        TIME = "time",
+        TIMESTAMP = "timestamp",
+        TIMESTAMPZ = "timestampz",
+        BIGINT = "bigint",
+        # POSITIVE = "number",
+        EMAIL = "email",
+        URL = "url",
+        PORT = "port",
+        IP = "ipaddress",
+        JWT = "jwt",
+        LATLONG = "latlong",
+        ISO2 = "iso2",
+        ISO3 = "iso3",
+        MACADDRESS = "macaddress",
+        MIME = "mime",
+        CREDITCARD = "creditcard",
+        CURRENCY = "currency",
+        IMEI = "imei",
+        TEXT = "text",
+        VARCHAR ="varchar",
+        POSITIVE = "positive",
+        INT = "int",
+        BOOL ="bool",
+        JSON = "json",
+        OBJECT = "object",     ## key-value pairs
+        ENUM = "enum",       ## Enumerations
+        SET = "set",           ## Unique values set
+        SEQ ="seq",
+        TABLE = "table",      ## Table/Map/Dictionary
+        MCDB = "mcdb",       ## Database connection handle
+        MODELRECORD = "modelrecord",   ## Model record definition
+        MODELVALUE = "modelvalue",   ## Model value definition
   
     ProcType = proc(): DataTypes    ## will automatically receive record value for the model
     ProcValidateType = proc(): bool
 
     ProcedureTypes* = enum
         PROC,              ## proc(): T
-        VALIDATE_PROC,      ## proc(val: T): bool
-        DEFAULT_PROC,       ## proc(): T
-        SET_PROC,           ## proc(val: T)
-        GET_PROC,           ## proc(key: string): T
-        UNARY_PROC,         ## proc(val: T): T
-        BI_PROC,            ## proc(valA, valB: T): T
-        PREDICATE_PROC,     ## proc(val: T): bool
-        BI_PREDICATE_PROC,   ## proc(valA, valB: T): bool
-        SUPPLY_PROC,        ## proc(): T
-        BI_SUPPLY_PROC,      ## proc(): (T, T)
-        CONSUMER_PROC,      ## proc(val: T): void
-        BI_CONSUMER_PROC,    ## proc(valA, valB: T): void
-        COMPARATOR_PROC,    ## proc(valA, valB: T): int
-        MODEL_PROC,         ## proc(): Model  | to define new data model
+        VALIDATEPROC,      ## proc(val: T): bool
+        DEFAULTPROC,       ## proc(): T
+        SETPROC,           ## proc(val: T)
+        GETPROC,           ## proc(key: string): T
+        UNARYPROC,         ## proc(val: T): T
+        BIPROC,            ## proc(valA, valB: T): T
+        PREDICATEPROC,     ## proc(val: T): bool
+        BIPREDICATEPROC,   ## proc(valA, valB: T): bool
+        SUPPLYPROC,        ## proc(): T
+        BISUPPLYPROC,      ## proc(): (T, T)
+        CONSUMERPROC,      ## proc(val: T): void
+        BICONSUMERPROC,    ## proc(valA, valB: T): void
+        COMPARATORPROC,    ## proc(valA, valB: T): int
+        MODELPROC,         ## proc(): Model  | to define new data model
 
     TransformProcedureType*[T, R] = proc(val: T): R
     ValidateProcedureType*[T] = proc(val: T): bool
@@ -87,34 +110,39 @@ type
 
 
     OperatorTypes* = enum
-        EQ,
-        GT,
-        GTE,
-        LT,
-        LTE,
-        NEQ,
-        IN,
-        NOT_IN,
-        BETWEEN,
-        NOT_BETWEEN,
-        INCLUDES,
-        EXCLUDES,
-        LIKE,
-        NOT_LIKE,
-        STARTS_WITH,
-        ENDS_WITH,
-        ILIKE,
-        NOT_ILIKE,
-        REGEX,
-        NOT_REGEX,
-        IREGEX,
-        NOT_IREGEX,
-        ANY,
-        ALL,
+        EQ = "eq",
+        GT = "gt",
+        LT = "lt",
+        GTE = "gte",
+        LTE = "lte",
+        NEQ = "neq",
+        TRUE = "true",
+        FALSE = "false",
+        INCLUDES = "includes",
+        NOTINCLUDES = "notincludes",
+        STARTSWITH = "startswith",
+        ENDSWITH = "endswith",
+        NOTSTARTSWITH = "notstartswith",
+        NOTENDSWITH = "notendswith",
+        IN = "in",
+        NOTIN = "notin",
+        BETWEEN = "between",
+        NOTBETWEEN = "between",
+        EXCLUDES = "excludes",
+        LIKE = "like",
+        NOTLIKE = "notlike",
+        ILIKE = "ilike",
+        NOTILIKE = "notilike",
+        REGEX = "regex",
+        NOTREGEX = "notregex",
+        IREGEX = "iregex",
+        NOTIREGEX = "notiregex",
+        ANY = "any",
+        ALL = "all",
 
     RelationTypes* = enum
-        AND,
-        OR,
+        AND = "and",
+        OR = "or",
 
     QueryTypes* = enum        
         SAVE,
