@@ -91,10 +91,19 @@ type
         COMPARATORPROC,    ## proc(valA, valB: T): int
         MODELPROC,         ## proc(): Model  | to define new data model
 
-    TransformProcedureType*[T, R] = proc(val: T): R
-    ValidateProcedureType*[T] = proc(val: T): bool
-    SetProcedureType*[T] = proc(val: T)
-    GetProcedureType*[K, V] = proc(key: K): V
+    MessageObject* = Table[string, string]
+
+    ValidateResponseType* = object
+        ok: bool
+        errors: MessageObject
+
+    GetValueProcedureType*[T]= proc(): T ## return a value of type T
+    SetValueProcedureType*[T]= proc(val: T): T ## receive val-object as parameter
+    DefaultValueProcedureType*[T, R] = proc(val: T): R ## may/optionally receive val-object as parameter
+    ValidateProcedureType*[T] = proc(val: T): bool  ## may/optionally receive val-object as parameter
+    ValidateProcedureResponseType*[T] = proc(val: T): ValidateResponseType  ## receive val-object as parameter
+    ComputedProcedureType*[T,R] = proc(val: T): R  ## receive val-object as parameter
+
     IPredicateType* = proc(val: int): bool {.closure.} # {.closure.} is default to proc type
     StringPredicateType* = proc(val: string): bool {.closure.} 
     PredicateType*[T] = proc(val: T): bool {.closure.} 
@@ -103,10 +112,14 @@ type
     BinaryOperatorType*[T] = proc(val1, val2: T): T {.closure.} 
     FunctionType*[T, R] = proc(val: T): R {.closure.} 
     BiFunctionType*[T, U, R] = proc(val1: T, val2: U): R {.closure.} 
-    ConsumeType*[T] = proc(val: T) {.closure.} 
+    ConsumerType*[T] = proc(val: T) {.closure.} 
     BiConsumerType*[T, U] = proc(val1: T, val2: U) {.closure.} 
     SupplierType*[R] = proc(): R {.closure.} 
     ComparatorType*[T] = proc(val1: T, val2: T): int {.closure.} 
+
+    ValidateProceduresType* = Table[string, ValidateProcedureResponseType]
+
+    ComputedProceduresType* = Table[string, ComputedProcedureType]
 
 
     OperatorTypes* = enum
@@ -199,6 +212,22 @@ type
         fieldType*: DataTypes
         fieldMethod*: ProcType
 
+    FieldValueTypes* = string | int | bool | object | seq[string] | seq[int] | seq[bool] | seq[object]    
+
+    ValueParamsType* = Table[string, FieldValueTypes]    ## fieldName: fieldValue, must match fieldType (re: validate) in model definition
+
+    ActionParamsType* = seq[ValueParamsType]  ## documents for create or update task/operation
+
+    QueryParamsType* = Table[string, auto]
+
+    ExistParamItemType* = Table[string, auto]
+
+    ExistParamsItemType* = seq[ExistParamItemType]
+
+    ProjectParamsType* = Table[string, int]    # 1 => include | 0 => exclude
+
+    SortParamsType* = Table[string, int]    # 1 for "asc", -1 for "desc"
+
     FieldDescType* = object
         fieldType*: DataTypes
         fieldLength*: Positive
@@ -210,9 +239,9 @@ type
         primaryKey*: bool
         minValue*: float
         maxValue*: float
-        defaultValue*: ProcType  # result/return type (DataTypes) must match the fieldType
-        validate*: ProcValidateType       # validate field-value (pattern/format), returns a bool (valid=true/invalid=false)
-        setValue*: ProcType # transform fieldValue prior to insert/update | result/return type (DataTypes) must match the fieldType or cast string-result to fieldType
+        defaultValue*: DefaultValueProcedureType[DataTypes, DataTypes]  # result/return type (DataTypes) must match the fieldType
+        validate*: ValidateProcedureType[DataTypes]       # validate field-value (pattern/format), returns a bool (valid=true/invalid=false)
+        setValue*: SetValueProcedureType[DataTypes] # transform fieldValue prior to insert/update | result/return type (DataTypes) must match the fieldType or cast string-result to fieldType
 
     RecordDescType* = Table[string, FieldDescType ]
     
