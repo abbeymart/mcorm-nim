@@ -214,7 +214,7 @@ type
 
     FieldValueTypes* = string | int | bool | object | seq[string] | seq[int] | seq[bool] | seq[object]    
 
-    ValueParamsType* = Table[string, FieldValueTypes]    ## fieldName: fieldValue, must match fieldType (re: validate) in model definition
+    ValueParamsType* = Table[string, auto]    ## fieldName: fieldValue, must match fieldType (re: validate) in model definition
 
     ActionParamsType* = seq[ValueParamsType]  ## documents for create or update task/operation
 
@@ -232,20 +232,21 @@ type
         fieldType*: DataTypes
         fieldLength*: Positive
         fieldPattern*: string # "![0-9]" => excluding digit 0 to 9 | "![_, -, \, /, *, |, ]" => exclude the charaters
-        fieldFormat*: string # "12.2" => max 12 digits, including 2 digits after the decimal => fieldPattern
-        notNull*: bool
+        # fieldFormat*: string # "12.2" => max 12 digits, including 2 digits after the decimal => fieldPattern
+        allowNull*: bool
         unique*: bool
         indexable*: bool
         primaryKey*: bool
         minValue*: float
         maxValue*: float
+        setValue*: SetValueProcedureType[DataTypes] # transform fieldValue prior to insert/update | result/return type (DataTypes) must match the fieldType or cast string-result to fieldType
         defaultValue*: DefaultValueProcedureType[DataTypes, DataTypes]  # result/return type (DataTypes) must match the fieldType
         validate*: ValidateProcedureType[DataTypes]       # validate field-value (pattern/format), returns a bool (valid=true/invalid=false)
-        setValue*: SetValueProcedureType[DataTypes] # transform fieldValue prior to insert/update | result/return type (DataTypes) must match the fieldType or cast string-result to fieldType
-
+        validateMessage: string
+        
     RecordDescType* = Table[string, FieldDescType ]
     
-    RelationOptionTypes* = enum
+    RelationActionTypes* = enum
         RESTRICT,       ## must remove target-record(s), prior to removing source-record
         CASCADE,        ## default for ONUPDATE | update foreignKey value or delete foreignKey record/value
         NO_ACTION,      ## leave the foreignKey value, as-is
@@ -260,18 +261,27 @@ type
 
     ## Model/table relationship, from source-to-target
     ## 
-    RelationType* = ref object
+    ModelRelationType* = ref object
         sourceModel*: ModelType
         sourceTable*: string
         targetModel*: ModelType
         targetTable*: string
         relationType*: RelationTypeTypes   # one-to-one, one-to-many, many-to-one, many-to-many  
-        targetField*: string    # default: primary key/"id" field, it could be another unique key
-        foreignKey*: string     # default: sourceModel<sourceField>, e.g. userId
-        relationTable*: string # optional tableName for many-to-many | default: sourceTable_targetTable
-        onDelete*: RelationOptionTypes
-        onUpdate*: RelationOptionTypes
+        sourceField*: string
+        targetField*: string    ## default: primary key/"id" field, it could be another unique key
+        foreignField*: string   ## default: sourceModel<sourceField>, e.g. userId
+        relationField*: string  ## relation-targetField, for many-to-many
+        relationTable*: string  ## optional tableName for many-to-many | default: sourceTable_targetTable
+        onDelete*: RelationActionTypes
+        onUpdate*: RelationActionTypes
 
+    ModelOptionsType* = object
+        timeStamp: bool        ## auto-add: createdAt and updatedAt | default: true
+        actorStamp: bool       ## auto-add: createdBy and updatedBy | default: true
+        activeStamp: bool      ## auto-add isActive, if not already set | default: true
+        docValueDesc: Table[string, FieldDescType]
+        docValue: Table[string, string] 
+    
     ## Model definition / description
     ## 
     ModelType* = ref object
@@ -281,11 +291,13 @@ type
         timeStamp*: bool           ## auto-add: createdAt and updatedAt | default: true
         actorStamp*: bool           ## auto-add: createdBy and updatedBy | default: true
         activeStamp*: bool          ## record active status, isActive (true | false) | default: true
-        relations*: seq[RelationType]
-        computedFields*: seq[ComputedFieldType]
-        # methods*: seq[ProcedureType]    ## model-level procs, e.g fullName(a, b: T): T
+        relations*: seq[ModelRelationType]
+        computedMethods: ComputedProceduresType     ## model-level functions, e.g fullName(a, b: T): T
+        validateMethods: ValidateProceduresType
+        # computedFields*: seq[ComputedFieldType]
+        # methods*: seq[ProcedureType]  ## model-level procs, e.g fullName(a, b: T): T
         appDb*: Database        ## Db handle
-        alterTable*: bool       ## create / alter table and sync existing data, if there was a change to the table structure | default: true       
+        alterSyncTable*: bool   ## create / alter table and sync existing data, if there was a change to the table structure | default: true       
                                 ## if alterTable: false, it will create/re-create the table, with no data sync
 
     SaveFieldType* = object
