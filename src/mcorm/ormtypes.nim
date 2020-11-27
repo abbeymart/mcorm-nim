@@ -117,9 +117,9 @@ type
     SupplierType*[R] = proc(): R {.closure.} 
     ComparatorType*[T] = proc(val1: T, val2: T): int {.closure.} 
 
-    ValidateProceduresType* = Table[string, ValidateProcedureResponseType]
+    ValidateProceduresType* = Table[string, ValidateProcedureResponseType[DataTypes]]
 
-    ComputedProceduresType* = Table[string, ComputedProcedureType]
+    ComputedProceduresType* = Table[string, ComputedProcedureType[DataTypes, DataTypes]]
 
     OperatorTypes* = enum
         EQ = "eq",
@@ -214,14 +214,16 @@ type
     FieldValueTypes* = string | int | bool | object | seq[string] | seq[int] | seq[bool] | seq[object]    
 
     ValueParamsType* = Table[string, DataTypes]    ## fieldName: fieldValue, must match fieldType (re: validate) in model definition
+    
+    ValueToDataType* = Table[string, DataTypes]
 
     ActionParamsType* = seq[ValueParamsType]  ## documents for create or update task/operation
 
     QueryParamsType* = Table[string, DataTypes]
 
-    ExistParamItemType* = Table[string, DataTypes]
+    ExistParamType* = Table[string, DataTypes]
 
-    ExistParamsItemType* = seq[ExistParamItemType]
+    ExistParamsType* = seq[ExistParamType]
 
     ProjectParamsType* = Table[string, int]    # 1 => include | 0 => exclude
 
@@ -275,11 +277,11 @@ type
         onUpdate*: RelationActionTypes
 
     ModelOptionsType* = object
-        timeStamp: bool        ## auto-add: createdAt and updatedAt | default: true
-        actorStamp: bool       ## auto-add: createdBy and updatedBy | default: true
-        activeStamp: bool      ## auto-add isActive, if not already set | default: true
-        docValueDesc: Table[string, FieldDescType]
-        docValue: Table[string, string] 
+        timeStamp*: bool        ## auto-add: createdAt and updatedAt | default: true
+        actorStamp*: bool       ## auto-add: createdBy and updatedBy | default: true
+        activeStamp*: bool      ## auto-add isActive, if not already set | default: true
+        docValueDesc*: Table[string, FieldDescType]
+        docValue*: Table[string, string] 
     
     ## Model definition / description
     ## 
@@ -291,13 +293,64 @@ type
         actorStamp*: bool           ## auto-add: createdBy and updatedBy | default: true
         activeStamp*: bool          ## record active status, isActive (true | false) | default: true
         relations*: seq[ModelRelationType]
-        computedMethods: ComputedProceduresType     ## model-level functions, e.g fullName(a, b: T): T
-        validateMethods: ValidateProceduresType
+        computedProcedures*: ComputedProceduresType     ## model-level functions, e.g fullName(a, b: T): T
+        validateProcedures*: ValidateProceduresType
         # computedFields*: seq[ComputedFieldType]
         # methods*: seq[ProcedureType]  ## model-level procs, e.g fullName(a, b: T): T
         appDb*: Database        ## Db handle
         alterSyncTable*: bool   ## create / alter table and sync existing data, if there was a change to the table structure | default: true       
                                 ## if alterTable: false, it will create/re-create the table, with no data sync
+
+    UserInfoType* = object
+        username: string
+        email: string
+
+    CrudOptionsType* = object
+        skip: Positive
+        limit: Positive
+        parentColls: seq[string]
+        childColls: seq[string]
+        recursiveDelete: bool
+        checkAccess: bool
+        accessDb: Database
+        auditDb: Database
+        serviceDb: Database
+        auditColl: string
+        serviceColl: string
+        userColl: string
+        roleColl: string
+        accessColl: string
+        verifyColl: string
+        maxQueryLimit: Positive
+        logAll: bool
+        logCreate: bool
+        logUpdate: bool
+        logRead: bool
+        logDelete: bool
+        logLogin: bool
+        logLogout: bool
+        unAuthorizedMessage: string
+        recExistMessage: string
+        cacheExpire: Positive
+        modelOptions: ModelOptionsType
+        loginTimeout: Positive
+        usernameExistsMessage: string
+        emailExistsMessage: string
+        msgFrom: string
+
+    CrudTaskType* = object 
+        appDb: Database
+        tableName: string
+        userInfo: UserInfoType
+        actionParams: ActionParamsType
+        existParams: ExistParamsType
+        queryParams: QueryParamsType
+        docIds: seq[string]
+        projectParams: ProjectParamsType
+        sortParams: SortParamsType
+        token: string
+        options: CrudOptionsType
+        taskName: string
 
     SaveFieldType* = object
         fieldName*: string

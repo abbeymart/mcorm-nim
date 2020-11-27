@@ -20,26 +20,41 @@ export ormtypes
 
 ## Model constructor: for table structure definition
 ## 
-proc newModel*(appDb: Database;
-        modelName: string;
-        tableName: string;
-        recordDesc: RecordDescType;
-        relations: seq[RelationType] = @[];
-        timeStamp: bool = true;
-        actorStamp: bool = true;
-        activeStamp: bool = true;
-        alterTable: bool = true;       
-        methods: seq[ProcedureType] = @[]): ModelType =
-    result.appDb = appDb
-    result.modelName = modelName
-    result.tableName = tableName
-    result.recordDesc = recordDesc
-    result.timeStamp = timeStamp
-    result.actorStamp = actorStamp
-    result.activeStamp = activeStamp
-    result.relations = relations
-    result.alterTable = alterTable
-    result.methods = methods
+proc newModel*(model: ModelType; options: ModelOptionsType): ModelType =
+    result.appDb = model.appDb
+    result.modelName = model.modelName
+    result.tableName = model.tableName
+    result.recordDesc = model.recordDesc
+    result.timeStamp = model.timeStamp or options.timeStamp
+    result.actorStamp = model.actorStamp or options.actorStamp
+    result.activeStamp = model.activeStamp or options.activeStamp
+    result.relations = model.relations
+    result.alterSyncTable = model.alterSyncTable
+    result.computedProcedures = model.computedProcedures
+    result.validateProcedures = model.validateProcedures
+
+## Model instance methods
+## 
+proc getParentRelations*(model: ModelType;): seq[ModelRelationType] = 
+    result = @[]
+
+proc getChildRelations*(model: ModelType;): seq[ModelRelationType] = 
+    result = @[]
+
+proc getParentTables*(model: ModelType;): seq[string] = 
+    result = @[]
+
+proc getChildTables*(model: ModelType;): seq[string] = 
+    result = @[]
+
+proc computeDocValueType*(model: ModelType; docValue: ValueParamsType): ValueToDataType =
+    result = ValueToDataType()
+
+proc updateDefaultValues*(model: ModelType; docValue: ValueParamsType): ValueParamsType =
+    result = ValueParamsType()
+
+proc validateDocValue*(model: ModelType; docValue: ValueParamsType; taskName: string): ValidateResponseType =
+    result = ValidateResponseType()
 
 ## Model DDL methods
 ## modelTable methods/procs to create/alter/drop table/index/view..., sync data...
@@ -73,3 +88,16 @@ proc dropView*(model: ModelType): ResponseMessage =
 
 proc syncData*(model: ModelType): ResponseMessage = 
     result = getResMessage("success", ResponseMessage())
+
+proc save(model: ModelType; params: CrudTaskType; options: CrudOptionsType = {}): ResponseMessage =
+    result = ResponseMessage()
+
+proc get(model: ModelType; params: CrudTaskType; options: CrudOptionsType = {}): ResponseMessage =
+    result = ResponseMessage()
+
+proc gets(model: ModelType; params: CrudTaskType; options: CrudOptionsType = {}): ResponseMessage =
+    result = ResponseMessage()
+
+proc delete(model: ModelType; params: CrudTaskType; options: CrudOptionsType = {}): ResponseMessage =
+    result = ResponseMessage()
+
