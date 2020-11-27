@@ -89,15 +89,14 @@ proc dropView*(model: ModelType): ResponseMessage =
 proc syncData*(model: ModelType): ResponseMessage = 
     result = getResMessage("success", ResponseMessage())
 
-proc save(model: ModelType; params: CrudTaskType; options: CrudOptionsType = {}): ResponseMessage =
-    result = ResponseMessage()
+proc save*(model: ModelType; params: CrudTaskType; options: CrudOptionsType): ResponseMessage =
+    result = getResMessage("success", ResponseMessage())
 
-proc get(model: ModelType; params: CrudTaskType; options: CrudOptionsType = {}): ResponseMessage =
-    result = ResponseMessage()
+proc get*(model: ModelType; params: CrudTaskType; options: CrudOptionsType): ResponseMessage =
+    result = getResMessage("success", ResponseMessage())
 
-proc gets(model: ModelType; params: CrudTaskType; options: CrudOptionsType = {}): ResponseMessage =
-    result = ResponseMessage()
+proc gets*(model: ModelType; params: CrudTaskType; options: CrudOptionsType): ResponseMessage =
+    result = getResMessage("success", ResponseMessage())
 
-proc delete(model: ModelType; params: CrudTaskType; options: CrudOptionsType = {}): ResponseMessage =
-    result = ResponseMessage()
-
+proc delete*(model: ModelType; params: CrudTaskType; options: CrudOptionsType): ResponseMessage =
+    result = getResMessage("success", ResponseMessage())
