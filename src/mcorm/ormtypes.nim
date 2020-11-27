@@ -72,9 +72,9 @@ type
         MODELVALUE = "modelvalue",   ## Model value definition
   
     ProcType = proc(): DataTypes    ## will automatically receive record value for the model
-    ProcValidateType = proc(): bool
+    ProcValidateType* = proc(): bool
 
-    ProcedureTypes* = enum
+    ProcedureTypes = enum
         PROC,              ## proc(): T
         VALIDATEPROC,      ## proc(val: T): bool
         DEFAULTPROC,       ## proc(): T
@@ -120,7 +120,6 @@ type
     ValidateProceduresType* = Table[string, ValidateProcedureResponseType]
 
     ComputedProceduresType* = Table[string, ComputedProcedureType]
-
 
     OperatorTypes* = enum
         EQ = "eq",
@@ -214,13 +213,13 @@ type
 
     FieldValueTypes* = string | int | bool | object | seq[string] | seq[int] | seq[bool] | seq[object]    
 
-    ValueParamsType* = Table[string, auto]    ## fieldName: fieldValue, must match fieldType (re: validate) in model definition
+    ValueParamsType* = Table[string, DataTypes]    ## fieldName: fieldValue, must match fieldType (re: validate) in model definition
 
     ActionParamsType* = seq[ValueParamsType]  ## documents for create or update task/operation
 
-    QueryParamsType* = Table[string, auto]
+    QueryParamsType* = Table[string, DataTypes]
 
-    ExistParamItemType* = Table[string, auto]
+    ExistParamItemType* = Table[string, DataTypes]
 
     ExistParamsItemType* = seq[ExistParamItemType]
 
@@ -244,7 +243,7 @@ type
         validate*: ValidateProcedureType[DataTypes]       # validate field-value (pattern/format), returns a bool (valid=true/invalid=false)
         validateMessage: string
         
-    RecordDescType* = Table[string, FieldDescType ]
+    RecordDescType* = Table[string, DataTypes | FieldDescType]
     
     RelationActionTypes* = enum
         RESTRICT,       ## must remove target-record(s), prior to removing source-record
@@ -287,7 +286,7 @@ type
     ModelType* = ref object
         modelName*: string
         tableName*: string
-        recordDesc*: Table[string, FieldDescType] | RecordDescType
+        recordDesc*: RecordDescType
         timeStamp*: bool           ## auto-add: createdAt and updatedAt | default: true
         actorStamp*: bool           ## auto-add: createdBy and updatedBy | default: true
         activeStamp*: bool          ## record active status, isActive (true | false) | default: true
