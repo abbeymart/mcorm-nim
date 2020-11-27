@@ -302,7 +302,14 @@ type
                                 ## if alterTable: false, it will create/re-create the table, with no data sync
 
     UserInfoType* = object
-        username: string
+        userId: string
+        firstName: string
+        lastName: string
+        language: string
+        loginName: string
+        token: string
+        expire: Positive
+        group: string
         email: string
 
     CrudOptionsType* = object
