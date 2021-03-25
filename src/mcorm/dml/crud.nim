@@ -38,11 +38,13 @@ proc newCrud*(params: CrudParamsType; options: CrudOptionsType): CrudType =
     result.params.limit = params.limit
 
     # crud-options
+    result.options.maxQueryLimit = options.maxQueryLimit
     result.options.auditTable = options.auditTable
     result.options.accessTable = options.accessTable
     result.options.roleTable = options.roleTable
     result.options.userTable = options.userTable
     result.options.userProfileTable = options.userProfileTable
+    result.options.serviceTable = options.serviceTable
     result.options.auditDb = options.auditDb
     result.options.accessDb = options.accessDb
     result.options.logAll = options.logAll
@@ -50,7 +52,8 @@ proc newCrud*(params: CrudParamsType; options: CrudOptionsType): CrudType =
     result.options.logCreate = options.logCreate
     result.options.logUpdate = options.logUpdate
     result.options.logDelete = options.logDelete
-    result.options.checkAccess = options.checkAccess
+    result.options.checkAccess = options.checkAccess # user to implement auth as a middleware
+    result.options.cacheExpire = options.cacheExpire # cache expire in secs
 
     # Compute hashKey from tableName, queryParams, sortParams, projectParams and recordIds
     var qParam = $result.params.queryParams
