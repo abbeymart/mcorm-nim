@@ -9,11 +9,13 @@
 #           All CRUD operations are transactional
 # 
 
+import mcorm/ormtypes
 import mcorm/ddl/model
 import mcorm/dml/getrecord
 import mcorm//dml/saverecord
 import mcorm/dml/deleterecord
 
+export ormtypes
 export model
 export getrecord
 export saverecord

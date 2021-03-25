@@ -13,10 +13,7 @@
 
 # types
 # import tables
-import mcresponse, mcdb
-import ../ormtypes
-
-export ormtypes
+import mcresponse, mctypes
 
 ## Model constructor: for table structure definition
 ## 
@@ -47,13 +44,13 @@ proc getParentTables*(model: ModelType;): seq[string] =
 proc getChildTables*(model: ModelType;): seq[string] = 
     result = @[]
 
-proc computeDocValueType*(model: ModelType; docValue: ValueParamsType): ValueToDataType =
+proc computeDocValueType*(model: ModelType; docValue: RecordValueType): ValueToDataType =
     result = ValueToDataType()
 
-proc updateDefaultValues*(model: ModelType; docValue: ValueParamsType): ValueParamsType =
-    result = ValueParamsType()
+proc updateDefaultValues*(model: ModelType; docValue: RecordValueType): RecordValueType =
+    result = RecordValueType()
 
-proc validateDocValue*(model: ModelType; docValue: ValueParamsType; taskName: string): ValidateResponseType =
+proc validateDocValue*(model: ModelType; docValue: RecordValueType; taskName: string): ValidateResponseType =
     result = ValidateResponseType()
 
 ## Model DDL methods
@@ -89,14 +86,14 @@ proc dropView*(model: ModelType): ResponseMessage =
 proc syncData*(model: ModelType): ResponseMessage = 
     result = getResMessage("success", ResponseMessage())
 
-proc save*(model: ModelType; params: CrudTaskType; options: CrudOptionsType): ResponseMessage =
+proc save*(model: ModelType; params: CrudParamsType; options: CrudOptionsType): ResponseMessage =
     result = getResMessage("success", ResponseMessage())
 
-proc get*(model: ModelType; params: CrudTaskType; options: CrudOptionsType): ResponseMessage =
+proc get*(model: ModelType; params: CrudParamsType; options: CrudOptionsType): ResponseMessage =
     result = getResMessage("success", ResponseMessage())
 
-proc gets*(model: ModelType; params: CrudTaskType; options: CrudOptionsType): ResponseMessage =
+proc gets*(model: ModelType; params: CrudParamsType; options: CrudOptionsType): ResponseMessage =
     result = getResMessage("success", ResponseMessage())
 
-proc delete*(model: ModelType; params: CrudTaskType; options: CrudOptionsType): ResponseMessage =
+proc delete*(model: ModelType; params: CrudParamsType; options: CrudOptionsType): ResponseMessage =
     result = getResMessage("success", ResponseMessage())

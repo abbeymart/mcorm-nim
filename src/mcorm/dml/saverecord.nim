@@ -40,7 +40,7 @@ proc createRecord(crud: CrudParamType; rec: seq[SaveParamType]): ResponseMessage
         let recCnt = createScripts.len
 
         # perform audit/trans-log action
-        let collValues = %*(TaskRecord(taskRec: rec, recCount: recCnt ))
+        const collValues = %*(TaskRecord(taskRec: rec, recCount: recCnt ))
         if crud.logCreate:
             discard crud.transLog.createLog(crud.tableName, collValues, crud.userInfo.id)
         

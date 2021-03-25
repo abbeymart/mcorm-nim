@@ -106,7 +106,7 @@ proc checkAccess*(
                                         roleTable = roleTable)
         # userRoles: {roles: ["cd", "ef", "gh"]}
         # TODO: check/validate parseJson result of the currentUser jsonb string value
-        let accessRes = CheckAccess(userId: currentUser[0],
+        let accessRes: CheckAccess = CheckAccess(userId: currentUser[0],
                                     group: currentUser[1],
                                     groups: strToSeq(currentUser[2]),
                                     isActive: strToBool(currentUser[3]),

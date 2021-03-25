@@ -9,104 +9,92 @@
 ## 
 
 import db_postgres, json, tables
-import mcdb, mccache, mcresponse, mctranslog
-import ../helpers/helper, ../ormtypes
+import mcdb, mccache, mcresponse, mctranslog, mctypes
+import ../helpers/helper
 
 export db_postgres, json, tables
 export mcdb, mccache, mcresponse, mctranslog
-export helper, ormtypes
+export helper
 
 ## Default CRUD contructor returns the instance/object for CRUD task(s)
-proc newCrud*(appDb: Database; 
-            tableName: string; 
-            userInfo: UserParamType;
-            actionParams: seq[SaveParamType] = @[];
-            queryParam: QueryParamType = QueryParamType();
-            queryReadParam: QueryReadParamType = QueryReadParamType();
-            queryDeleteParam: QueryDeleteParamType = QueryDeleteParamType();
-            queryUpdateParam: QueryUpdateParamType = QueryUpdateParamType();
-            querySaveParam: QuerySaveParamType = QuerySaveParamType();
-            where: seq[WhereParamType] = @[];
-            docIds: seq[string] = @[];
-            insertInto: seq[InsertIntoType] = @[];
-            selectFrom: seq[SelectFromType] = @[];
-            selectInto: seq[SelectIntoType] = @[];
-            queryFunctions: seq[ProcedureTypes] = @[];
-            order: seq[OrderType] = @[];
-            group: seq[GroupType]  = @[];
-            having: seq[HavingType] = @[];
-            caseQuery: seq[CaseQueryType]  = @[];
-            subQuery: seq[SubQueryType] = @[];
-            joinQuery: seq[JoinQueryType] = @[];
-            unionQuery: seq[UnionQueryType] = @[];
-            queryDistinct: bool = false;
-            queryTop: QueryTopType = QueryTopType();
-            skip: Positive = 0;
-            limit: Positive = 100000;
-            defaultLimit: Positive = 100000;
-            auditTable: string = "audits";
-            accessTable: string = "accesskeys";
-            serviceTable: string = "services";
-            roleTable: string = "roles";
-            userTable: string = "users";
-            accessDb: Database = appDb;
-            auditDb: Database = appDb;
-            logAll: bool = false;
-            logRead: bool = false;
-            logCreate: bool = false;
-            logUpdate: bool = false;
-            logDelete: bool = false;
-            checkAccess: bool = true;
-            transLog: LogParam = LogParam(auditDb: auditDb, auditColl: auditTable);
-            options: Table[string, DataTypes]): CrudParamType =
-    
+## newCrud constructor returns a new crud-instance
+proc newCrud*(params: CrudParamsType; options: CrudOptionsType): CrudType =    
     # new result
+    result = CrudType()
 
-    result.appDb = appDb
-    result.tableName = tableName
-    result.userInfo = userInfo
-    result.actionParams = actionParams
-    result.queryParam = queryParam
-    result.queryReadParam = queryReadParam
-    result.queryDeleteParam = queryDeleteParam
-    result.queryUpdateParam = queryUpdateParam
-    result.querySaveParam = querySaveParam
-    result.docIds = docIds
-   
-    # Create/Update
-    result.insertInto = insertInto
-    result.selectFrom = selectFrom
-    result.selectInto = selectInto
+    # crud-params
+    result.params.appDb = params.appDb
+    result.params.tableName = params.tableName
+    result.params.userInfo = params.userInfo
+    result.params.actionParams = params.actionParams
+    result.params.recordIds = params.recordIds
+    result.params.queryParams = params.queryParams
+    result.params.sortParams = params.sortParams
+    result.params.projectParams = params.projectParams
+    result.params.existParams = params.existParams
+    result.params.token = params.token
+    result.params.taskName = params.taskName
+    result.params.skip = params.skip
+    result.params.limit = params.limit
 
-    # Read
-    result.queryFunctions = queryFunctions
-    result.where = where
-    result.order = order
-    result.group = group
-    result.having = having
-    result.queryDistinct = queryDistinct
-    result.queryTop= queryTop
-    result.joinQuery = joinQuery
-    result.unionQuery = unionQuery
-    result.caseQuery = caseQuery
-    result.skip = skip
-    result.limit = limit
-    result.defaultLimit = defaultLimit
+    # crud-options
+    result.options.auditTable = options.auditTable
+    result.options.accessTable = options.accessTable
+    result.options.roleTable = options.roleTable
+    result.options.userTable = options.userTable
+    result.options.userProfileTable = options.userProfileTable
+    result.options.auditDb = options.auditDb
+    result.options.accessDb = options.accessDb
+    result.options.logAll = options.logAll
+    result.options.logRead = options.logRead
+    result.options.logCreate = options.logCreate
+    result.options.logUpdate = options.logUpdate
+    result.options.logDelete = options.logDelete
+    result.options.checkAccess = options.checkAccess
 
-    # Shared
-    result.auditTable = auditTable
-    result.accessTable = accessTable
-    result.auditTable = auditTable
-    result.roleTable = roleTable
-    result.userTable = userTable
-    result.auditDb = auditDb
-    result.accessDb = accessDb
-    result.logAll = logAll
-    result.logRead = logRead
-    result.logCreate = logCreate
-    result.logUpdate= logUpdate
-    result.logDelete = logDelete
-    result.checkAccess = checkAccess
+    # Compute hashKey from tableName, queryParams, sortParams, projectParams and recordIds
+    var qParam = $result.params.queryParams
+    var sParam = $result.params.sortParams
+    var pParam = $result.params.projectParams
+    var recIds = $result.params.recordIds
+    result.hashKey = qParam & sParam & pParam & recIds
 
-    # translog instance
-    result.transLog = newLog(result.auditDb, result.auditTable)
+    # Default values
+    if result.options.auditTable == "":
+            result.options.auditTable = "audits"
+
+    if result.options.accessTable == "":
+            result.options.accessTable = "access_keys"
+
+    if result.options.roleTable == "":
+            result.options.roleTable = "roles"
+
+    if result.options.userTable == "":
+            result.options.userTable = "users"
+
+    if result.options.userProfileTable == "":
+            result.options.userProfileTable = "user_profile"
+    
+    if result.options.serviceTable == "":
+            result.options.serviceTable = "services"
+
+    if result.options.auditDb == nil:
+            result.options.auditDb = result.params.appDb
+
+    if result.options.accessDb == nil:
+            result.options.accessDb = result.params.appDb
+
+    if result.options.skip < 0 :
+            result.options.skip = 0
+
+    if result.options.maxQueryLimit == 0 :
+            result.options.maxQueryLimit = 10000
+
+    if result.options.limit > result.options.maxQueryLimit and result.options.maxQueryLimit != 0:
+            result.options.limit = result.options.maxQueryLimit
+
+    if result.options.cacheExpire <= 0:
+            result.options.cacheExpire = 300 # 300 secs, 5 minutes
+
+    # audit/transLog instance
+    result.transLog = newLog(result.options.auditDb, result.options.auditTable)
