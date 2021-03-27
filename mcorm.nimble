@@ -11,7 +11,7 @@ srcDir        = "src"
 # Dependencies
 
 requires "nim >= 1.2.0"
-requires "mctypes >= 0.1.0"
+requires "mctypes >= 0.1.1"
 requires "mcdb >= 0.1.3"
 requires "mccache >= 0.1.2"
 requires "mcresponse >= 0.1.0"

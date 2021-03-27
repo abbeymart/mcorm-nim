@@ -34,10 +34,10 @@ proc newCrud*(params: CrudParamsType; options: CrudOptionsType): CrudType =
     result.params.existParams = params.existParams
     result.params.token = params.token
     result.params.taskName = params.taskName
-    result.params.skip = params.skip
-    result.params.limit = params.limit
 
     # crud-options
+    result.options.skip = options.skip
+    result.options.limit = options.limit
     result.options.maxQueryLimit = options.maxQueryLimit
     result.options.auditTable = options.auditTable
     result.options.accessTable = options.accessTable
@@ -64,40 +64,45 @@ proc newCrud*(params: CrudParamsType; options: CrudOptionsType): CrudType =
 
     # Default values
     if result.options.auditTable == "":
-            result.options.auditTable = "audits"
+        result.options.auditTable = "audits"
 
     if result.options.accessTable == "":
-            result.options.accessTable = "access_keys"
+        result.options.accessTable = "access_keys"
 
     if result.options.roleTable == "":
-            result.options.roleTable = "roles"
+        result.options.roleTable = "roles"
 
     if result.options.userTable == "":
-            result.options.userTable = "users"
+        result.options.userTable = "users"
 
     if result.options.userProfileTable == "":
-            result.options.userProfileTable = "user_profile"
+       result.options.userProfileTable = "user_profile"
     
     if result.options.serviceTable == "":
-            result.options.serviceTable = "services"
+        result.options.serviceTable = "services"
 
     if result.options.auditDb == nil:
-            result.options.auditDb = result.params.appDb
+        result.options.auditDb = result.params.appDb
 
     if result.options.accessDb == nil:
-            result.options.accessDb = result.params.appDb
+        result.options.accessDb = result.params.appDb
 
     if result.options.skip < 0 :
-            result.options.skip = 0
+        result.options.skip = 0
 
     if result.options.maxQueryLimit == 0 :
-            result.options.maxQueryLimit = 10000
+        result.options.maxQueryLimit = 10000
 
     if result.options.limit > result.options.maxQueryLimit and result.options.maxQueryLimit != 0:
-            result.options.limit = result.options.maxQueryLimit
+        result.options.limit = result.options.maxQueryLimit
 
     if result.options.cacheExpire <= 0:
-            result.options.cacheExpire = 300 # 300 secs, 5 minutes
+        result.options.cacheExpire = 300 # 300 secs, 5 minutes
 
     # audit/transLog instance
     result.transLog = newLog(result.options.auditDb, result.options.auditTable)
+
+
+# String() function implementation for crud instance/object
+proc `$`*(crud: CrudType): string =
+        result = $crud
